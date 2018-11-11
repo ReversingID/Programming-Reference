@@ -78,14 +78,12 @@ typedef struct
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
 int32_t  stack_init (stack_t * stack, size_t N);
 
-int32_t  stack_push (stack_t * stack, T value);
-
+int32_t  stack_push (stack_t * stack, T * value);
 int32_t  stack_pop  (stack_t * stack, T * value);
 
 int32_t  stack_peek (stack_t * stack, T * value);
 
 int32_t  stack_capacity (stack_t * stack);
-
 int32_t  stack_size (stack_t * stack);
 
 int32_t  stack_empty (stack_t * stack);
@@ -96,14 +94,23 @@ int32_t  stack_grow (stack_t * stack);
 
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
 /*
+Digunakan untuk melakukan penyalinan elemen secara generik.
+Implementasikan ini jika T merupakan elemen yang kompleks.
+*/
+void element_copy(T * dst, T * src)
+{
+    *dst = *src;
+}
+
+/*
     Buat node baru.
 */
-node_t * node_new(T value)
+node_t * node_new(T * value)
 {
     node_t * node = (node_t*) malloc(sizeof(node_t));
     if (node != NULL)
     {
-        memcpy(&node->_value, &value, sizeof(T));
+        element_copy(&node->_value, value);
         node->_next = NULL;
     }
 
@@ -141,17 +148,14 @@ int32_t stack_init (stack_t * stack, size_t N)
     Return: 
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t stack_push(stack_t * stack, T value)
+int32_t stack_push(stack_t * stack, T * value)
 {
     node_t * node;
 
     /* buat node baru. Jika gagal, maka kondisi stack tidak berubah */
-    node = (node_t*) malloc(sizeof(node_t));
+    node = node_new(value);
     if (node == NULL)
         return 0;
-
-    /* salin nilai ke node baru */
-    memcpy(&node->_value, value, sizeof(T));
 
     node->_next = stack->_top;
 
@@ -190,7 +194,7 @@ int32_t stack_pop(stack_t * stack, T * value)
     stack->_length --;
     
     /* Menyalin data */
-    memcpy(value, &node->_value, sizeof(T));
+    element_copy(value, &node->_value);
 
     /* menghapus node di TOP */
     free(node);
@@ -217,7 +221,7 @@ int32_t stack_peek(stack_t * stack, T * value)
         return 0;
 
     /* Menyalin data */
-    memcpy(value, &stack->_top->_value, sizeof(T));
+    element_copy(value, &stack->_top->_value);
 
     return 1;
 }

@@ -51,14 +51,12 @@ typedef struct
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
 int32_t  stack_init (stack_t * stack, size_t N);
 
-int32_t  stack_push (stack_t * stack, T value);
-
+int32_t  stack_push (stack_t * stack, T * value);
 int32_t  stack_pop  (stack_t * stack, T * value);
 
 int32_t  stack_peek (stack_t * stack, T * value);
 
 int32_t  stack_capacity (stack_t * stack);
-
 int32_t  stack_size (stack_t * stack);
 
 int32_t  stack_empty (stack_t * stack);
@@ -68,7 +66,14 @@ int32_t  stack_grow (stack_t * stack);
 
 
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
-
+/*
+Digunakan untuk melakukan penyalinan elemen secara generik.
+Implementasikan ini jika T merupakan elemen yang kompleks.
+*/
+void element_copy(T * dst, T * src)
+{
+    *dst = *src;
+}
 
 /* ***************************** PRIMITIVE & OPERATIONS ***************************** */
 /*
@@ -117,7 +122,7 @@ int32_t stack_init (stack_t * stack, size_t N)
     Return: 
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t stack_push(stack_t * stack, T value)
+int32_t stack_push(stack_t * stack, T * value)
 {
     /* 
     Mengecek apakah ukuran stack masih mencukupi.
@@ -126,7 +131,7 @@ int32_t stack_push(stack_t * stack, T value)
         return 0;
 
     /* Menyalin data */
-    memcpy(&stack->_values[stack->_top], &value, sizeof(T));
+    element_copy(&stack->_values[stack->_top], value);
 
     /* TOP menunjuk ke posisi berikutnya */
     stack->_top ++;
@@ -156,7 +161,7 @@ int32_t stack_pop(stack_t * stack, T * value)
     stack->_top --;
 
     /* Menyalin data */
-    memcpy(value, &stack->_values[stack->_top], sizeof(T));
+    element_copy(value, &stack->_values[stack->_top]);
 
     return 1;
 }
@@ -177,7 +182,7 @@ int32_t stack_peek(stack_t * stack, T * value)
         return 0;
 
     /* Menyalin data */
-    memcpy(value, &stack->_values[stack->_top - 1], sizeof(T));
+    element_copy(value, &stack->_values[stack->_top - 1]);
 
     return 1;
 }
@@ -257,6 +262,10 @@ int32_t stack_grow(stack_t * stack)
     new_values = (T*) realloc(stack->_values, capacity);
     if (new_values == NULL)
         return 0;
+
+    /* Jika alamat yang dikembalikan sama maka tidak perlu dilakukan penyalinan */
+    if (new_values == stack->_values)
+        return 1;
     
     /* Salin seluruh data di buffer lama */
     memcpy(new_values, stack->_values, sizeof(T) * stack->_capacity);

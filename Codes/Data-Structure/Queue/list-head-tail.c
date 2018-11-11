@@ -63,25 +63,35 @@ typedef struct singly_t
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
 int32_t  queue_init (queue_t * queue, size_t N);
 
-int32_t  queue_enqueue (queue_t * queue, T value);
-
+int32_t  queue_enqueue (queue_t * queue, T * value);
 int32_t  queue_dequeue (queue_t * queue, T * value);
 
 int32_t  queue_peek (queue_t * queue, T * value);
 
 int32_t  queue_size (queue_t * queue);
 
+int32_t  queue_empty(queue_t * queue);
+int32_t  queue_full (queue_t * queue);
 
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
 /*
+Digunakan untuk melakukan penyalinan elemen secara generik.
+Implementasikan ini jika T merupakan elemen yang kompleks.
+*/
+void element_copy(T * dst, T * src)
+{
+    *dst = *src;
+}
+
+/*
     Buat node baru.
 */
-node_t * node_new(T value)
+node_t * node_new(T * value)
 {
     node_t * node = (node_t*) malloc(sizeof(node_t));
     if (node != NULL)
     {
-        memcpy(&node->_value, &value, sizeof(T));
+        element_copy(&node->_value, value);
         node->_next = NULL;
     }
     return node;
@@ -118,7 +128,7 @@ int32_t queue_init (queue_t * queue, size_t N)
     Return: 
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t queue_enqueue(queue_t * queue, T value)
+int32_t queue_enqueue(queue_t * queue, T * value)
 {
     /* buat node baru. Jika gagal, maka kondisi list tak berubah */
     node_t * node = node_new(value);
@@ -159,6 +169,9 @@ int32_t queue_dequeue(queue_t * queue, T * value)
     
     head = queue->_head;
 
+    /* salin nilai ke value */
+    element_copy(value, &head->_value);
+
     /* ubah agar head menunjuk ke node berikutnya dan turunkan counter panjang list */
     queue->_head = head->_next;
     
@@ -185,7 +198,7 @@ int32_t queue_peek(queue_t * queue, T * value)
         return 0;
 
     /* Menyalin data */
-    memcpy(value, queue->_head, sizeof(T));
+    element_copy(value, &queue->_head->_value);
 
     return 1;
 }

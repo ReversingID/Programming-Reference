@@ -89,16 +89,16 @@ typedef struct singly_t
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
 int32_t  singly_init (singly_t * collection);
 
-int32_t  singly_prepend (singly_t * collection, T value);
-int32_t  singly_append  (singly_t * collection, T value);
-int32_t  singly_insert  (singly_t * collection, uint32_t index, T value);
+int32_t  singly_prepend (singly_t * collection, T * value);
+int32_t  singly_append  (singly_t * collection, T * value);
+int32_t  singly_insert  (singly_t * collection, uint32_t index, T * value);
 
 int32_t  singly_delete_front (singly_t * collection);
 int32_t  singly_delete_rear  (singly_t * collection);
 int32_t  singly_delete_at    (singly_t * collection, uint32_t index);
-int32_t  singly_delete       (singly_t * collection, T value, uint32_t count);
+int32_t  singly_delete       (singly_t * collection, T * value, uint32_t count);
 
-int32_t  singly_update (singly_t * collection, uint32_t index, T value);
+int32_t  singly_update (singly_t * collection, uint32_t index, T * value);
 
 int32_t  singly_merge (singly_t * collection, singly_t * source);
 
@@ -113,14 +113,27 @@ void     singly_traverse (singly_t * collection, callback_t callback, T * acc);
 
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
 /*
+Digunakan untuk melakukan penyalinan elemen secara generik.
+Implementasikan ini jika T merupakan elemen yang kompleks.
+*/
+void element_copy(T * dst, T * src)
+{
+    *dst = *src;
+}
+int  element_equal(T * elem1, T * elem2)
+{
+    return (*elem1 == *elem2);
+}
+
+/*
     Buat node baru.
 */
-node_t * node_new(T value)
+node_t * node_new(T * value)
 {
     node_t * node = (node_t*) malloc(sizeof(node_t));
     if (node != NULL)
     {
-        memcpy(&node->_value, &value, sizeof(T));
+        element_copy(&node->_value, value);
         node->_next = NULL;
     }
 
@@ -164,7 +177,7 @@ int32_t singly_init(singly_t * collection)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_prepend(singly_t * collection, T value)
+int32_t singly_prepend(singly_t * collection, T * value)
 {
     node_t * node; 
 
@@ -194,7 +207,7 @@ int32_t singly_prepend(singly_t * collection, T value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_append(singly_t * collection, T value)
+int32_t singly_append(singly_t * collection, T * value)
 {
     node_t *node, *tail; 
 
@@ -206,7 +219,7 @@ int32_t singly_append(singly_t * collection, T value)
     tail = collection->_tail;
 
     /* ubah nilai di elemen fiktif */
-    tail->_value = value;
+    element_copy(&tail->_value, value);
 
     /* tambahkan elemen fiktif baru */
     tail->_next = node;
@@ -301,6 +314,71 @@ int32_t singly_delete_at(singly_t * collection, uint32_t index)
 }
 
 /*
+    Penghapusan (delete)
+    Menghapus sebanyak `count` kemunculan nilai `value` di list.
+
+    Parameter:
+        - [singly_t] collection: objek yang telah dikonstruksi.
+        - [T] value: elemen yang akan dihapus dari collection.
+        - [uint32_t] count: banyaknya salinan node yang akan dihapus, 
+                    0 jika ingin hapus semua kemunculan nilai.
+    Return:
+        - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
+*/
+int32_t singly_delete(singly_t * collection, T * value, uint32_t count)
+{
+    node_t   *prevnode, *iternode, *nextnode;
+    uint32_t length;
+
+    /* jika list kosong maka kondisi list tidak berubah */
+    if (collection->_length == 0)
+        return 0;
+    
+    /* 
+    jika count bernilai 0, hapus semua kemunculan nilai.
+    Kita bisa anggap semua node adalah sama sehingga kemungkinan menghapus
+    semua nilai adalah sebanyak panjang dari list tersebut 
+    */ 
+    if (count == 0)
+        count  = collection->_length;
+    
+    length     = collection->_length;
+    prevnode   = collection->_head;
+    iternode   = prevnode->_next;
+
+    /* iterasi list selama masih ada node dan counter masih ada */
+    while (count && iternode != collection->_tail)
+    {
+        /* simpan alamat node penerus */
+        nextnode = iternode->_next;
+
+        /* jika node memiliki nilai yang dicari ... */
+        if (element_equal(&iternode->_value, value))
+        {
+            /* sesuaikan tautan pada prevnode agar menunjuk ke node penerus "iternode" */
+            prevnode->_next = nextnode;
+            
+            /* hapus "iternode" */
+            free(iternode);
+            
+            /* kurangi counter dan jumlah node */
+            count --;
+            length --;
+        }
+        /* jika tidak, maka ubah nilai "prevnode" agar dapat mengikuti "iternode" */
+        else 
+            prevnode = iternode;
+
+        /* pindahkan pointer "iternode" menunjuk ke node berikutnya */
+        iternode = nextnode;
+    }
+    
+    collection->_length = length;
+
+    return 1;
+}
+
+/*
     Penyisipan (insert)
     Menambahkan elemen baru di tengah list.
 
@@ -312,7 +390,7 @@ int32_t singly_delete_at(singly_t * collection, uint32_t index)
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
 #include <stdio.h>
-int32_t singly_insert(singly_t * collection, uint32_t index, T value)
+int32_t singly_insert(singly_t * collection, uint32_t index, T * value)
 {
     node_t   *prevnode, *node, *iternode;
     uint32_t iter;
@@ -384,106 +462,4 @@ void singly_traverse(singly_t * collection, callback_t callback, T * acc)
         /* maju ke node berikutnya */
         iternode = iternode->_next;
     }
-}
-
-
-#include <stdio.h>
-
-int32_t printT(T * val, T * acc)
-{
-    printf("%d %p\n", *val, val);
-}
-
-int main()
-{
-    singly_t coll1, coll2, coll3;
-    T acc;
-    
-    /* inisialisasi collection */
-    singly_init(&coll1);
-    singly_init(&coll2);
-    singly_init(&coll3);
-
-    /* Tambah node di awal list */
-    singly_prepend(&coll1, 10);
-    printf("Kondisi list-1 (prepend):\n");
-    singly_traverse(&coll1, &printT, &acc);
-    printf("\n\n");
-
-    /* Tambah node di akhir list */
-    singly_append(&coll1, 20);
-    singly_append(&coll1, 30);
-    /* Tambah node di awal list */
-    singly_prepend(&coll1, 40);
-    printf("Kondisi list-2 (append-append-prepend):\n");
-    singly_traverse(&coll1, &printT, &acc);
-    printf("\n\n");
-
-    /* Tambah node sebagai index 2 */
-    singly_insert(&coll1, 2, 50);
-    printf("Kondisi list-3 (insert di tengah):\n");
-    singly_traverse(&coll1, &printT, &acc);
-    printf("\n\n");
-
-    /* Tambah node sebagai index 0 */
-    singly_insert(&coll1, 0, 60);
-    printf("Kondisi list-4 (insert di awal):\n");
-    singly_traverse(&coll1, &printT, &acc);
-    printf("\n\n");
-
-    /* Tambah node sebagai index 12 */
-    singly_insert(&coll1, 12, 70);
-    printf("Kondisi list-5 (insert di index lebih besar daripada panjang list):\n");
-    singly_traverse(&coll1, &printT, &acc);
-    printf("\n\n");
-
-    // /* Update node dengan index 4 */
-    // singly_update(&coll1, 4, 25);
-    // printf("Kondisi list-6 (update node ke-4):\n");
-    // singly_traverse(&coll1, &printT, &acc);
-    // printf("\n\n");
-
-    // /* 
-    // gabungkan coll1 dan coll2 
-    // karena coll2 kosong, maka coll2 akan bernilai sama dengan coll1
-    // */
-    // singly_merge(&coll2, &coll1);
-    // printf("Kondisi list-7 (coll1) len=%d:\n", singly_length(&coll1));
-    // singly_traverse(&coll1, &printT, &acc);
-    // printf("\n");
-    // printf("Kondisi list-7 (coll2) len=%d:\n", singly_length(&coll2));
-    // singly_traverse(&coll2, &printT, &acc);
-    // printf("\n\n");
-
-    // /* Hapus nilai 60 sebanyak 2 buah dari coll2 */
-    // singly_delete(&coll2, 60, 2);
-    // printf("Kondisi list-8 (menghapus node dengan nilai 60):\n");
-    // singly_traverse(&coll2, &printT, &acc);
-    // printf("\n\n");
-
-    // /* Hapus node pertama */
-    // singly_delete_front(&coll2);
-    // printf("Kondisi list-9 (menghapus node awal):\n");
-    // singly_traverse(&coll2, &printT, &acc);
-    // printf("\n\n");
-
-    // /* Hapus node terakhir */
-    // singly_delete_rear(&coll2);
-    // printf("Kondisi list-10 (menghapus node terakhir):\n");
-    // singly_traverse(&coll2, &printT, &acc);
-    // printf("\n\n");
-
-    // /* Kloning coll2 dan merge */
-    // singly_clone(&coll3, &coll2);
-    // printf("Kondisi list-11 (list orisinil):\n");
-    // singly_traverse(&coll2, &printT, &acc);
-    // printf("\n");
-    // printf("Kondisi list-11 (list hasil clone):\n");
-    // singly_traverse(&coll3, &printT, &acc);
-    // printf("\n");
-    // singly_merge(&coll3, &coll2);
-    // printf("Kondisi list-11 (hasil merge coll3 & coll2):\n");
-    // singly_traverse(&coll3, &printT, &acc);
-    // printf("\n\n");
-    return 0;
 }
