@@ -32,6 +32,13 @@
             ^
            HEAD
     
+    Kasus 1 element
+    ...     A -- +
+            ^    |
+            + -- +
+            ^
+          HEAD  
+    
 
     HEAD adalah pointer yang menunjuk ke node di awal list.
 
@@ -39,6 +46,12 @@
     alamat link yang bernilai NULL pada akhir traversal. Dengan representasi ini
     maka traversal selalu terhenti pada elemen terakhir. Operasi terhadap element
     terakhir tidak memerlukan adanya memorisasi alamat node pendahulu.
+
+
+    Asumsi:
+    Struktur data tidak generic.
+    Tidak ada alokasi VALUE ketika pembuatan node baru, data yang disimpan akan disalin
+    secara langsung.
 */
 
 
@@ -80,18 +93,19 @@ typedef struct singly_t
 } singly_t;
 
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
-int32_t  singly_init (singly_t * collection);
+int32_t  singly_init    (singly_t * collection);
+int32_t  singly_destroy (singly_t * collection);
 
-int32_t  singly_prepend (singly_t * collection, T * value);
-int32_t  singly_append  (singly_t * collection, T * value);
-int32_t  singly_insert  (singly_t * collection, uint32_t index, T * value);
+int32_t  singly_prepend (singly_t * collection, T value);
+int32_t  singly_append  (singly_t * collection, T value);
+int32_t  singly_insert  (singly_t * collection, uint32_t index, T value);
 
 int32_t  singly_delete_front (singly_t * collection);
 int32_t  singly_delete_rear  (singly_t * collection);
 int32_t  singly_delete_at    (singly_t * collection, uint32_t index);
-int32_t  singly_delete       (singly_t * collection, T * value, uint32_t count);
+int32_t  singly_delete       (singly_t * collection, T value, uint32_t count);
 
-int32_t  singly_update (singly_t * collection, uint32_t index, T * value);
+int32_t  singly_update (singly_t * collection, uint32_t index, T value);
 
 int32_t  singly_merge (singly_t * collection, singly_t * source);
 
@@ -106,28 +120,15 @@ void     singly_traverse (singly_t * collection, callback_t callback, T * acc);
 
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
 /*
-Digunakan untuk melakukan penyalinan elemen secara generik.
-Implementasikan ini jika T merupakan elemen yang kompleks.
-*/
-void element_copy(T * dst, T * src)
-{
-    *dst = *src;
-}
-int  element_equal(T * elem1, T * elem2)
-{
-    return (*elem1 == *elem2);
-}
-
-/*
     Buat node baru.
 */
-node_t * node_new(T * value)
+node_t * node_new(T value)
 {
     node_t * node = (node_t*) malloc(sizeof(node_t));
     if (node != NULL)
     {
-        element_copy(&node->_value, value);
-        node->_next = NULL;
+        node->_value = value;
+        node->_next = node;
     }
 
     return node;
@@ -148,7 +149,26 @@ int32_t singly_init(singly_t * collection)
 {
     collection->_length = 0;
     collection->_head   = NULL;
+    return 1;
+}
+
+/*
+    Destruktor (penghancur objek)
+    destruktsi objek yang valid untuk membebaskan objek dari memori
+
+    Parameter:
+        - [singly_t] collection: objek yang akan didestruksi.
+    Return: 
+        - [int32_t] status konstruksi (0 = gagal, 1 = berhasil)
+*/
+int32_t singly_destroy(singly_t * collection)
+{
+    if (collection->_length > 0 && collection->_head)
+        singly_clear(collection);
     
+    collection->_length = 0;
+    collection->_head   = NULL;
+
     return 1;
 }
 
@@ -162,7 +182,7 @@ int32_t singly_init(singly_t * collection)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_prepend(singly_t * collection, T * value)
+int32_t singly_prepend(singly_t * collection, T value)
 {
     /* 
     operasi prepend() atau menambahkan node di urutan terdepan merupakan 
@@ -181,7 +201,7 @@ int32_t singly_prepend(singly_t * collection, T * value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_append(singly_t * collection, T * value)
+int32_t singly_append(singly_t * collection, T value)
 {
     /* 
     Operasi append() atau menambahkan node di urutan terakhir merupakan
@@ -201,54 +221,47 @@ int32_t singly_append(singly_t * collection, T * value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-#include <stdio.h>
-int32_t singly_insert(singly_t * collection, uint32_t index, T * value)
+int32_t singly_insert(singly_t * collection, uint32_t index, T value)
 {
-    node_t   *prevnode, *node, *iternode;
-    uint32_t iter;
+    node_t   *node, *iternode;
 
     /* buat node baru. Jika gagal, maka kondisi list tak berubah */
     node = node_new(value);
     if (node == NULL)
         return 0;
 
-    prevnode = NULL;
-    iternode = collection->_head;
-
-    /* jika senarai kosong, jadikan node sebagai elemen pertama (head) */
+    /* Jika senarai kosong, jadikan node sebagai elemen pertama (HEAD) */
     if (collection->_length == 0)
         collection->_head = node;
+    
+    /* Jika penambahan dilakukan di awal (index 0) maka ... */
+    else if (index == 0)
+    {
+        node->_next = collection->_head;
+        collection->_head = node;
+    }
 
     /* jika tidak, temukan posisi yang sesuai untuk menyisipkan node */
     else 
     {
-        printf(" > %d\n", index);
+        iternode = collection->_head;
+
         /* iterasi list, cari node ke-(index-1) atau selama list masih ada */
-        for (iter = index; iternode->_next != iternode && iter; iter--)
-        {
-            prevnode = iternode;
+        while (iternode->_next != iternode && --index)
             iternode = iternode->_next;
-            printf("  %d %p %p\n", iter, prevnode, iternode);
+
+        /* iterasi mencapai ujung, elemen baru akan ditambahkan di ujung */
+        if (iternode->_next == iternode)
+            iternode->_next = node;
+        /* iterasi mencapai posisi pertengahan, elemen baru akan ditambahkan di tengah */
+        else 
+        {
+            node->_next = iternode->_next;
+            iternode->_next = node;
         }
-        printf(" < %d %p %p\n", iter, node, iternode);
-
-
-        /* tautkan node pendahulu (prevnode) ke node saat ini */
-        if (prevnode)
-            prevnode->_next = node;
-        
-        /* tautkan node saat ini ke node penerus */
-        if (iternode  )
-            node->_next = iternode;
-
-        /* jika index adalah 0, maka jadikan node sebagai head */
-        if (index == 0)
-            collection->_head = node;
-
     }
 
     collection->_length ++;
-
     return 1;
 }
 
@@ -300,12 +313,45 @@ int32_t singly_delete_rear(singly_t * collection)
 */
 int32_t singly_delete_at(singly_t * collection, uint32_t index)
 {
-    return 1;
+    node_t   *prevnode, *iternode;
     
-    /* dealokasi node */
-    // free(iternode);
-    collection->_length --;
+    /* Jika list kosong atau index melebihi panjang list, maka kondisi list tak berubah */
+    if (collection->_length == 0 || index >= collection->_length)
+        return 0;
 
+    iternode = collection->_head;
+
+    /* Jika hanya ada satu node tersisa, kosongkan */
+    if (collection->_length == 1)
+        collection->_head = NULL;
+
+    /* Jika penghapusan dilakukan di depan maka ubah posisi HEAD */
+    else if (index == 0)
+        collection->_head = iternode->_next;
+    
+    /* Jika tidak, iterasi hingga node ke-index */
+    else 
+    {
+        /* Iterasi list, cari node urutan ke-index atau selama list masih ada */
+        while (iternode->_next != iternode && index--)
+        {
+            prevnode = iternode;
+            iternode = iternode->_next;
+        }
+
+        /* Jika ini node terakhir, tautkan node pendahulu ke diri sendiri */
+        if (iternode == iternode->_next)
+            prevnode->_next = prevnode;
+        
+        /* Jika tidak, tautkan node berikutnya ke node pendahulu */
+        else
+            prevnode->_next = iternode->_next;
+    }
+
+    /* Dealokasi node */
+    free(iternode);
+
+    collection->_length --;
     return 1;
 }
 
@@ -321,10 +367,8 @@ int32_t singly_delete_at(singly_t * collection, uint32_t index)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_delete(singly_t * collection, T * value, uint32_t count)
+int32_t singly_delete(singly_t * collection, T value, uint32_t count)
 {
-    return 1;
-
     node_t   *prevnode, *iternode, *nextnode;
     uint32_t length;
 
@@ -339,31 +383,48 @@ int32_t singly_delete(singly_t * collection, T * value, uint32_t count)
     */ 
     if (count == 0)
         count  = collection->_length;
-    
-    prevnode   = NULL;
+
     length     = collection->_length;
     iternode   = collection->_head;
 
-    /* iterasi list selama masih ada node dan counter masih ada */
-    while (count && iternode)
+    /* Jika node yang dicari ada di awal, hapus node yang berurutan di awal */
+    if (iternode->_value == value)
+    {
+        /* iterasi list dan hapus node yang sesuai di awal */
+        while (count && iternode->_next != iternode && iternode->_value == value)
+        {
+            /* Kondisi saat ini prevnode masih NULL, kita masih ada di awal */
+            nextnode = iternode->_next;
+
+            /* hapus "iternode" yang berarti kurangi counter dan jumlah node */
+            free(iternode);
+            count --;
+            length --;
+
+            iternode = nextnode;
+        }
+
+        /* pindahkan HEAD ke posisi yang sesuai */
+        collection->_head = iternode;
+    }
+    
+    prevnode = iternode;
+    iternode = iternode->_next;
+
+    /* iterasi segment di tengah list */
+    while (count && iternode->_next != iternode)
     {
         /* simpan alamat node penerus */
         nextnode = iternode->_next;
 
         /* jika node memiliki nilai yang dicari ... */
-        if (element_equal(&iternode->_value, value))
+        if (iternode->_value == value)
         {
             /* sesuaikan tautan pada prevnode agar menunjuk ke node penerus "iternode" */
-            if (prevnode)
-                prevnode->_next = nextnode;
-            /* bila node yang dihapus merupakan head, maka pindahkan head ke posisi berikutnya */
-            else
-                collection->_head = nextnode;
+            prevnode->_next = nextnode;
             
-            /* hapus "iternode" */
-            free(iternode);
-            
-            /* kurangi counter dan jumlah node */
+            /* hapus "iternode" yang berarti kurangi counter dan jumlah node */
+            free(iternode); 
             count --;
             length --;
         }
@@ -375,6 +436,24 @@ int32_t singly_delete(singly_t * collection, T * value, uint32_t count)
         iternode = nextnode;
     }
     
+    /*
+    Ada dua kondisi berakhirnya loop:
+        - tidak ada lagi yang perlu dihapus (count mencapai 0)
+        - mencapai ujung list
+    
+    Periksa node jika kondisi kedua tercapai.
+    */
+    if (count && iternode->_value == value)
+    {
+        /* Jika ini node terakhir */
+        if (length == 1)
+            collection->_head = NULL;
+            
+        /* hapus "iternode" */
+        free(iternode);
+        length --;
+    }
+
     collection->_length = length;
 
     return 1;
@@ -390,7 +469,7 @@ int32_t singly_delete(singly_t * collection, T * value, uint32_t count)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t singly_update(singly_t * collection, uint32_t index, T * value)
+int32_t singly_update(singly_t * collection, uint32_t index, T value)
 {
     node_t * iternode;
 
@@ -407,7 +486,7 @@ int32_t singly_update(singly_t * collection, uint32_t index, T * value)
             iternode = iternode->_next;
 
         /* ubah nilainya */
-        element_copy(&iternode->_value, value);
+        iternode->_value = value;
     }
 
     return 1;
@@ -466,19 +545,25 @@ int32_t singly_clear(singly_t * collection)
 {
     node_t *iternode, *nextnode;
 
-    if (collection->_length)
+    /* Jika list kosong maka tidak ada yang perlu dilakukan */
+    if (collection->_head == NULL)
+        return 0;
+
+    iternode = collection->_head;
+
+    /* Iterasi seluruh list */
+    while (iternode->_next != iternode)
     {
-        /* Iterasi seluruh list */
-        iternode = collection->_head;
-        while (iternode)
-        {
-            nextnode = iternode->_next;
-            free(iternode);
-            iternode = nextnode;
-        }
-        collection->_length = 0;
+        nextnode = iternode->_next;
+        free(iternode);
+        iternode = nextnode;
     }
 
+    /* Hapus list akhir */
+    free(iternode);
+    
+    /* Ubah kondisi sebagai list kosong */ 
+    collection->_length = 0;
     collection->_head = NULL;
 
     return 1;
@@ -514,8 +599,6 @@ int32_t singly_clone(singly_t * collection, singly_t * source)
     node_t   *iterdst = NULL, *itersrc = NULL, *node;
     uint32_t length = 0;
 
-    return 1;
-
     /*
     Apabila objek telah menyimpan beberapa node, maka list
     harus dibersihkan terlebih dahulu.
@@ -527,7 +610,7 @@ int32_t singly_clone(singly_t * collection, singly_t * source)
     if (itersrc)
     {
         /* alokasi node sebagai calon head */
-        node = node_new(&itersrc->_value);
+        node = node_new(itersrc->_value);
         
         /* jika alokasi berhasil maka ... */
         if (node)
@@ -543,9 +626,9 @@ int32_t singly_clone(singly_t * collection, singly_t * source)
             iterdst = node;
 
             /* iterasi list source dan lakukan clone untuk setiap node yang ada */
-            while (itersrc)
+            while (itersrc->_next != itersrc)
             {
-                node = node_new(&itersrc->_value);
+                node = node_new(itersrc->_value);
                 if (node)
                 {
                     /* menautkan node sebagai penerus */
@@ -556,11 +639,18 @@ int32_t singly_clone(singly_t * collection, singly_t * source)
                 }
                 itersrc = itersrc->_next;
             }
+
+            /* buat dan tautkan node terakhir */
+            node = node_new(itersrc->_value);
+            if (node)
+            {
+                iterdst->_next = node;
+                length++;
+            }
         }
     }
 
     collection->_length = length;
-
     return 1;
 }
 
@@ -578,7 +668,6 @@ int32_t singly_clone(singly_t * collection, singly_t * source)
 void singly_traverse(singly_t * collection, callback_t callback, T * acc)
 {
     node_t *iternode;
-    uint32_t iter;
 
     /* Jika list kosong atau callback tak terdefinisi, maka iterasi tidak dilakukan */
     if (collection->_length == 0 || callback == NULL)
@@ -586,12 +675,15 @@ void singly_traverse(singly_t * collection, callback_t callback, T * acc)
 
     /* jika tidak, iterasi list */
     iternode = collection->_head;
-    for (iter = 0; iter < collection->_length; iter++)
+    while (iternode->_next != iternode)
     {
-        /* jalankan callback di setiap node */
+        /* jalankan callback di setiap node (kecuali akhir) */
         (*callback)(&iternode->_value, acc);
 
         /* maju ke node berikutnya */
         iternode = iternode->_next;
     }
+
+    /* jalankan callback di node ujung */
+    (*callback)(&iternode->_value, acc);
 }
