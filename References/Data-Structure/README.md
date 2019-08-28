@@ -1,4 +1,6 @@
-# Data Structure and Algorithm Reference
+# Programming Reference
+
+Open repository of programming topic for reverse engineering purpose.
 
 ## Istilah Dasar
 
@@ -7,7 +9,6 @@
 * **Data** (dalam ilmu komputer) adalah informasi yang direpresentasikan dalam bilangan maupun teks sebagai dasar dalam proses pengolahan.
 * **Abstract Data Type** (ADT) adalah sebuah model yang merepresentasikan data serta operasi yang didefinisikan terhadapnya.
 * **Container** adalah sebuah ADT yang berupa kumpulan objek-objek lain.
-
 
 ## Abstract Data Type
 
@@ -43,3 +44,19 @@ Sebuah struktur data / koleksi merupakan sebuah ADT. Dengan demikian terdapat op
 * Perubahan (update).
 * Penggabungan.
 * Operasi lain-lain.
+
+## Jenis Struktur Data
+
+Berdasarkan struktur dasar.
+
+struktur data linier:
+
+* List
+* Queue
+* Stack
+
+struktur data non linier:
+
+* Graph
+* Matrix
+* Tree
