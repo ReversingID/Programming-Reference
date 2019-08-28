@@ -1,0 +1,140 @@
+/*
+    Mediator
+    Archive of Reversing.ID
+    Design Pattern (Behavioral)
+
+    Tidak ada Colleague yang memiliki hubungan inheritance.
+
+Compile:
+    [clang]
+    $ clang++ mediator.cpp -o mediator
+    
+    [gcc]
+    $ g++ mediator.cpp -o mediator
+
+    [msvc]
+    $ cl mediator.cpp
+
+Run:
+    $ mediator
+*/
+#include <memory>
+#include <vector>
+#include <iostream>
+
+
+/* *********************************** DECLARATION *********************************** */
+
+class Mediator;
+
+using MediatorPtr  = std::weak_ptr<Mediator>;
+
+// ======================================================================================
+
+/**
+ * ComponentA (concrete)
+ * 
+ * Salah satu Colleague
+ */
+class ComponentA
+{
+protected:
+    MediatorPtr _mediator;
+
+public:
+    ComponentA (MediatorPtr mediator) : _mediator{mediator}
+    { }
+
+    virtual ~ComponentA() { }
+
+    void operationA()
+    {
+
+    }
+};
+
+using CompAPtr = std::weak_ptr<ComponentA>;
+
+// ======================================================================================
+
+/**
+ * ComponentB (concrete)
+ * 
+ * Salah satu Colleague
+ */
+class ComponentB
+{
+protected:
+    MediatorPtr _mediator;
+
+public:
+    ComponentB (MediatorPtr mediator) : _mediator{mediator}
+    { }
+
+    virtual ~ComponentB() { }
+
+    void operationB()
+    {
+        
+    }
+};
+
+using CompBPtr = std::weak_ptr<ComponentB>;
+
+// ======================================================================================
+
+/**
+ * Mediator (abstract)
+ */
+class Mediator
+{
+public:
+    virtual ~Mediator() { }
+
+    virtual void notify(Colleague * sender) = 0;
+};
+
+// ======================================================================================
+
+/**
+ * ConcreteMediator (concrete)
+ */
+class ConcreteMediator: public Mediator
+{
+    CompAPtr    _componentA;
+    CompBPtr    _componentB;
+
+public:
+
+    void add(ColleaguePtr c) override
+    {
+        _colleagues.push_back(c);   
+    }
+
+    void distribute(Colleague * sender, std::string msg) override
+    {
+        for (auto& colleague: _colleagues)
+            if (colleague->getId() != sender->getId())
+                colleague->recv(msg);
+    }
+};
+
+/* *********************************** USAGE *********************************** */
+
+int main(int argc, char* argv[])
+{
+    auto mediator = std::make_shared<ConcreteMediator>();
+
+    auto c1 = std::make_shared<ConcreteColleague>(mediator, 1);
+    auto c2 = std::make_shared<ConcreteColleague>(mediator, 2);
+    auto c3 = std::make_shared<ConcreteColleague>(mediator, 3);
+    
+    mediator->add(c1);
+    mediator->add(c2);
+    mediator->add(c3);
+
+    c1->send("Reversing.ID");
+    c3->send("Mediator Pattern!");
+
+    return 0;
+}

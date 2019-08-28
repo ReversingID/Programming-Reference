@@ -1,0 +1,117 @@
+/*
+    Pizza Maker
+
+    Factory Method Example
+    Archive of Reversing.ID
+    Design Pattern (Creational)
+    
+
+Compile:
+    [gcc]
+    $ g++ pizza-maker.cpp -o pizza-maker
+
+    [msvc]
+    $ cl pizza-maker.cpp
+
+Run:
+    $ pizza-maker
+*/
+#include <iostream>
+
+/* *********************************** DECLARATION *********************************** */
+/**
+ * Pizza (AbstractProduct)
+ * 
+ * Kelas dasar dari seluruh product yang akan dihasilkan.
+ * Kelas dasar dapat pula berupa sebuah kelas konkret.
+ */
+class Pizza
+{
+public:
+    virtual ~AbstractProduct() { }
+    virtual void production() = 0;
+};
+
+// ======================================================================================
+
+/**
+ * CheesePizza (concrete product)
+ * 
+ * Varian dari AbstractProduct
+ */
+class CheesePizza : public Pizza
+{
+public:
+    void production()
+    {
+        std::cout << "Cheese Pizza production." << std::endl;
+    }
+};
+
+// ======================================================================================
+
+/**
+ * MeatPizza (concrete product)
+ * 
+ * Varian dari AbstractProduct
+ */
+class MeatPizza : public Pizza
+{
+public:
+    void production()
+    {
+        std::cout << "Meat Pizza production." << std::endl;
+    }
+};
+
+// ======================================================================================
+
+/**
+ * PizzaFactory (AbstractFactory)
+ * 
+ * Interface dari kelas yang akan menghasilkan product.
+ */
+class PizzaFactory 
+{
+public:
+    virtual ~AbstractFactory() { }
+    virtual Pizza * create() = 0;
+};
+
+// ======================================================================================
+
+/**
+ * ConcreteFactory (concrete)
+ * 
+ * Kelas yang akan menghasilkan produk melalui pemanggilan fungsi tertentu.
+ * Fungsi mengabstraksi proses pembuatan sebuah kelas sehingga pengguna
+ * dapat memeroleh kelas tanpa harus melakukan pembuatan secara manual.
+ */
+class ConcreteFactory : public AbstractFactory
+{
+public:
+    AbstractProduct * build()
+    {
+        return new Product();
+    }
+};
+
+
+/* *********************************** USAGE *********************************** */
+
+int main(int argc, char* argv[])
+{
+    // Instansiasi objek factory untuk membangun produk
+    AbstractFactory * factory = new ConcreteFactory();
+
+    // Bangun tiap produk menggunakan factory
+    AbstractProduct * A = factory->build();
+
+    // Tes tiap operasi.
+    A->operation();
+
+    delete factory;
+    delete A;
+
+    return 0;
+}

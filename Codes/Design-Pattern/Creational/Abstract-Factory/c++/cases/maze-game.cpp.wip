@@ -1,0 +1,188 @@
+/*
+    Maze Game
+    Archive of Reversing.ID
+    Design Pattern (Creational/Abstract Factory)
+
+Compile:
+    [clang]
+    $ clang++ maze-game.cpp -o maze-game
+    
+    [gcc]
+    $ g++ maze-game.cpp -o maze-game
+
+    [msvc]
+    $ cl maze-game.cpp
+
+Run:
+    $ maze-game
+*/
+#include <memory>
+#include <iostream>
+
+/* *********************************** DECLARATION *********************************** */
+
+enum DirectionType { North, East, South, West };
+
+class MapSite 
+{
+public:
+    virtual void enter() = 0;
+};
+
+// ======================================================================================
+
+class Room : public MapSite
+{
+    std::weak_ptr<MapSite> _sides[4];
+    int _roomno;
+
+public:
+    Room(int roomno = 0);
+    Room(const Room& room);
+
+    virtual std::unique_ptr<Room> clone() const;
+    
+    void initialize(int number);
+    auto getSide(DirectionType direction) -> std::weak_ptr<MapSite>;
+
+    virtual void enter(); 
+};
+
+// ======================================================================================
+
+class Wall : public MapSite
+{
+public:
+    Wall(int = 0);
+    Wall(const Wall&);
+
+    virtual auto clone() const -> std::unique_ptr<Wall>;
+};
+
+// ======================================================================================
+
+class Door : public MapSite
+{
+public:
+    Door(std::weak_ptr<Room> r1, std::weak_ptr<Room> r2);
+    Door(const Door& door);
+
+    virtual auto clone() const -> std::unique_ptr<Door>;
+    
+    void initialize(std::weak_ptr<Room> r1, std::weak_ptr<Room> r2););
+
+    virtual void enter(); 
+
+    auto otherSideFrom(std::weak_ptr<Room> r1, std::weak_ptr<Room> r2);
+};
+
+// ======================================================================================
+
+class Maze 
+{
+public:
+    Maze();
+    Maze(const Maze&);
+
+    std::weak_ptr<Room> room(int number);
+
+    virtual auto clone() const -> std::unique_ptr<Maze>;
+}
+
+
+
+// ======================================================================================
+
+/**
+ * MazeFactory (abstract factory)
+ * 
+ * Digunakan sebagai base dari factory lain.
+ */
+class MazeFactory 
+{
+public:
+    virtual std::unique_ptr<Maze> makeMaze() = 0;
+    virtual std::unique_ptr<Wall> makeWall() = 0;
+    virtual std::unique_ptr<Room> makeRoom(int n) = 0;
+    virtual std::unique_ptr<Door> makeDoor(std::weak_ptr<Room> r1, std::weak_ptr<Room> r2) = 0;
+};
+
+// ======================================================================================
+
+/**
+ * BombedMazeFactory (concrete)
+ * 
+ * Factory / creator untuk kelompok BombedMaze
+ */
+class BombedMazeFactory : public MazeFactory
+{
+public:
+    BombedMazeFactory() { }
+
+    std::unique_ptr<Maze> makeMaze()
+    {
+
+    }
+
+    std::unique_ptr<Wall> makeWall()
+    {
+
+    }
+
+    std::unique_ptr<Room> makeRoom(int n)
+    {
+
+    }
+
+    std::unique_ptr<Door> makeDoor(std::weak_ptr<Room> r1, std::weak_ptr<Room> r2)
+    {
+
+    }
+};
+
+// ======================================================================================
+
+/**
+ * QtkMazeFactory (concrete)
+ * 
+ * Factory / creator untuk kelompok Gtk
+ */
+class QtkMazeFactory : public MazeFactory
+{
+public:
+    std::unique_ptr<Window> getToolboxWindow() override
+    {
+        return std::make_unique<QtToolboxWindow>();
+    }
+
+    std::unique_ptr<Window> getLayersWindow() override
+    {
+        return std::make_unique<QtLayersWindow>();
+    }
+
+    std::unique_ptr<Window> getMainWindow() override
+    {
+        return std::make_unique<QtMainWindow>();
+    }
+};
+
+
+
+/* *********************************** USAGE *********************************** */
+
+int main(int argc, char* argv[])
+{
+    std::unique_ptr<MazeFactory> factory{nullptr};
+    std::unique_ptr<Window>    toolw{nullptr};
+    std::unique_ptr<Window>    layerw{nullptr};
+    std::unique_ptr<Window>    mainw{nullptr};
+
+    /* Instansiasi objek factory untuk membangun produk */
+    factory = std::make_unique<BombedMazeFactory>();
+    toolw   = factory->getToolboxWindow();
+    layerw  = factory->getLayersWindow();
+    mainw   = factory->getMainWindow();
+
+    
+    return 0;
+}

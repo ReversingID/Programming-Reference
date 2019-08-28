@@ -1,0 +1,136 @@
+/*
+    Maze Game
+    Archive of Reversing.ID
+    Design Pattern (Creational/Factory method)
+    
+
+Compile:
+    [gcc]
+    $ g++ maze-game.cpp -o maze-game
+
+    [msvc]
+    $ cl maze-game.cpp
+
+Run:
+    $ maze-game
+*/
+#include <memory>
+#include <iostream>
+
+/**
+ * Skenario:
+ *  - Sebuah maze terdiri dari beberapa komponen, Room, Door
+ * 
+ */
+
+/* *********************************** DECLARATION *********************************** */
+
+/**
+ * Room (abstract)
+ */
+class Room 
+{
+public:
+    virtual ~Room() { }
+
+    /* sign that greet the adventurer */
+    virtual void sign() = 0;
+};
+
+// ======================================================================================
+
+/**
+ * EmptyRoom (concrete)
+ */
+class EmptyRoom : public Room 
+{
+public:
+    virtual void sign()
+    {
+        std::cout << "There is nothing in this room.";
+    }
+};
+
+// ======================================================================================
+
+/**
+ * MagicRoom (concrete)
+ */
+class MagicRoom : public Room
+{
+public:
+    virtual void sign()
+    {
+        std::cout << "Welcome to the enchanted room.";
+    }
+};
+
+// ======================================================================================
+
+/**
+ * TreasureRoom (concrete)
+ */
+class TreasureRoom : public Room 
+{
+public:
+    virtual void sign()
+    {
+        std::cout << "Welcome to the treasure room.";
+    }
+};
+
+// ======================================================================================
+
+class Maze 
+{
+public:
+    Maze();
+};
+
+class MazeGame
+{
+protected:
+    std::vector<Room> rooms;
+
+public:
+    
+    auto makeMaze()
+    {
+        return std::make_unique<Maze>();
+    }
+
+    auto makeRoom(int n)
+    {
+        return std::make_unique<Room>(n);
+    }
+
+    auto makeWall()
+    {
+        return std::make_unique<Wall>();
+    }
+
+    auto makeDoor(std::shared_ptr<Room> r1, std::shared_ptr<Room> r2)
+    {
+        return std::make_unique<Door>(r1, r2);
+    }
+};
+
+
+/* *********************************** USAGE *********************************** */
+
+int main(int argc, char* argv[])
+{
+    // Instansiasi objek factory untuk membangun produk
+    AbstractFactory * factory = new ConcreteFactory();
+
+    // Bangun tiap produk menggunakan factory
+    AbstractProduct * A = factory->build();
+
+    // Tes tiap operasi.
+    A->operation();
+
+    delete factory;
+    delete A;
+
+    return 0;
+}

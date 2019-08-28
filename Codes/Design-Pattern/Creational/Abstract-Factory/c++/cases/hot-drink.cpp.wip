@@ -1,0 +1,171 @@
+/*
+    Hot Drink
+    Archive of Reversing.ID
+    Design Pattern (Creational/Abstract Factory)
+
+Compile:
+    [clang]
+    $ clang++ hot-drink.cpp -o hot-drink
+    
+    [gcc]
+    $ g++ hot-drink.cpp -o hot-drink
+
+    [msvc]
+    $ cl hot-drink.cpp
+
+Run:
+    $ hot-drink
+*/
+#include <memory>
+#include <iostream>
+
+/* *********************************** DECLARATION *********************************** */
+
+struct HotDrink
+{
+    virtual ~HotDrink() = default;
+    virtual void prepare(int volume) = 0;
+};
+
+struct Tea : public HotDrink 
+{
+    void prepare(int volume) override 
+    {
+        std::cout << "Take tea bag, boil water, pour " << volume << "ml." << std::endl;
+    }
+};
+
+struct Coffee : public HotDrink
+{
+    void prepare(int volume) override
+    {
+        std::cout << "Grind some beans, boil water, pour " << volume << "ml" << std::endl;
+    }
+}
+
+// ======================================================================================
+
+/**
+ * FamilyB
+ * 
+ * Kelompok produk FamilyB terdiri dari beberapa variasi: ProductB1, ProductB2.
+ */
+class FamilyB 
+{
+public:
+    virtual ~FamilyB() {}
+    virtual int characteristic() = 0;
+};
+
+class ProductB1 : public FamilyB 
+{
+public:
+    int characteristic()
+    {
+        return 235;
+    }
+};
+
+class ProductB2 : public FamilyB 
+{
+public:
+    int characteristic()
+    {
+        return 282;
+    }
+};
+
+// ======================================================================================
+
+/**
+ * Creator (abstract)
+ * 
+ * Interface dari kelas yang akan menghasilkan kelompok produk.
+ */
+class Creator 
+{
+    std::shared_ptr<Creator> _engine = nullptr;
+
+public:
+    virtual ~Creator() { }
+
+    void set(std::shared_ptr<Creator> engine)
+    {
+        _engine = engine;
+    }
+    
+    virtual Product * build_ProductA()
+    {
+        _engine->build_ProductA();
+    }
+    virtual Product * build_ProductB()
+    {
+        _engine->build_ProductB();
+    }
+};
+
+// ======================================================================================
+
+/**
+ * FamilyXCreator (concrete)
+ * 
+ * Creator untuk product yang tergabung dalam keluarga X.
+ */
+class FamilyXCreator : public Creator
+{
+public:
+    auto build_ProductA() -> std::unique_ptr<FamilyA>
+    {
+        return std::make_unique<ProductA1>();
+    }
+
+    auto build_ProductB() -> std::unique_ptr<FamilyB>
+    {
+        return std::make_unique<ProductB1>();
+    }
+};
+
+// ======================================================================================
+
+/**
+ * FamilyYCreator (concrete)
+ * 
+ * Creator untuk product yang tergabung dalam keluarga Y.
+ */
+class FamilyYCreator : public Creator
+{
+public:
+    auto build_ProductA() -> std::unique_ptr<FamilyA>
+    {
+        return std::make_unique<ProductA2>();
+    }
+
+    auto build_ProductB() -> std::unique_ptr<FamilyB>
+    {
+        return std::make_unique<ProductB2>();
+    }
+};
+
+
+
+/* *********************************** USAGE *********************************** */
+
+int main(int argc, char* argv[])
+{
+    // Instansiasi objek factory untuk membangun produk
+    Creator * factory = new XStyleCreator();
+
+    // Bangun tiap produk menggunakan factory
+    Product * A = factory->build_ProductA(); 
+    Product * B = factory->build_ProductB();
+
+    // Tes tiap operasi.
+    A->operation();
+    B->operation();
+
+    delete factory;
+    delete A;
+    delete B;
+
+    return 0;
+}
