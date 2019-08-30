@@ -12,7 +12,7 @@ Konsep design-pattern memberikan istilah-istilah standard di kalangan software d
 
 Dalam reverse-engineering sebuah perangkat lunak yang kompleks, pemahaman terhadap design-pattern pun membantu. Pemahaman konsep ini berguna untuk dengan cepat mengetahui arsitektur yang digunakan sebuah perangkat lunak dalam pandangan global. Hal ini tentu perlu ditopang dengan pemahaman terhadap komponen-komponen di level yang lebih rendah.
 
-![Design Pattern - Periodic Table](_imgs_/perodic_table.png)
+![Design Pattern - Periodic Table](_imgs_/periodic_table.png)
 
 ### Klasifikasi Design-Pattern
 
