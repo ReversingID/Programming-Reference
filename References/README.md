@@ -13,3 +13,7 @@ Membangun sebuah struktur pengelolaan data agar dapat melakukan penyimpanan, pen
 ## Design Pattern
 
 Membangun hubungan antar objek dan komunikasi di antaranya untuk memecahkan masalah berulang dengan pola-pola tertentu.
+
+## Architecture
+
+Membangun struktur dasar dari sistem software berdasarkan modul-modul dan relasi antar elemen.
