@@ -51,7 +51,7 @@ void algorithm(T arr[], size_t size)
         Setelah ini, elemen terbesar akan dipindahkan ke akhir.
         */
         for (size_t i = 0; i < size - 1; i++)
-            if (arr[i] > arr[j + 1])
+            if (arr[i] > arr[i + 1])
                 swap(arr[i], arr[i + 1]);
         
         // lakukan rekursi ke rentang array tersisa
