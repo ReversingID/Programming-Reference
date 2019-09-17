@@ -33,11 +33,11 @@ Langkah:
     2 buat daftar sieve dengan entry untuk setiap bilangan bulat positif, ditandai 
       sebagai non-prime.
     3 untuk setiap bilangan Z di daftar hasil, lakukan operasi modulo 60 dengan sisa R.
-        3.1 jika R adalah 1, 13, 17, 29, 37, 41, 49, atau 53, ubah entry untuk setiap 
+        3.1 jika R adalah 1, 13, 17, 29, 37, 41, 49, atau 53, flip entry untuk setiap 
             solusi yang mungkin menjadi 4x^2 + y^2 = N
-        3.2 jika R adalah 7, 19, 31, atau 43, ubah entry untuk setiap solusi yang mungkin 
+        3.2 jika R adalah 7, 19, 31, atau 43, flip entry untuk setiap solusi yang mungkin 
           menjadi 3x^2 + y^2 = N 
-        3.3 jika R adalah 11, 23, 47, atau 59, ubah entry untuk setiap solusi yang mungkin 
+        3.3 jika R adalah 11, 23, 47, atau 59, flip entry untuk setiap solusi yang mungkin 
             menjadi 3x^2 - y^2 = N, dimana X - Y 
         3.4 selain itu, abaikan.
     4 mulai dari bilangan terkecil di daftar sieve.

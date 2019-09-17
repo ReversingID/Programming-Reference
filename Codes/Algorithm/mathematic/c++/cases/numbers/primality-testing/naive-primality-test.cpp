@@ -26,7 +26,7 @@ Run:
 
 /** Prime Number Check -- Naive Method **/
 
-bool Algorithm(size_t val)
+bool algorithm(size_t val)
 {
     if (val < 2)        // 0 dan 1 bukan bilangan prima
         return false;

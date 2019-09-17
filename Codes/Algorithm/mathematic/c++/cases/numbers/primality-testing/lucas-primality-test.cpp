@@ -32,32 +32,40 @@ Jika p adalah prima dan a adalah bilangan bulat, maka a^p kongruen dengan a (mod
 
 // ======================================================================================
 
-// bangkitkan faktor prima dari N
-void prime_factors(size_t N, std::vector<int> & factors)
+// bangkitkan faktor prima dari num
+auto factorize(size_t num)
 {
     size_t batas;
+    std::vector<size_t> factors;
 
-    if (N % 2 == 0)
-        factors.push_back(2);
-    
-    while (N % 2 == 0) N = N / 2;
-
-    for (size_t i = 3, batas = sqrt(N); i <= batas; i += 2)
+    // mendapatkan bernilai sama
+    while (num % 2 == 0)
     {
-        if (N % i == 0)
-            factors.push_back(i);
-        
-        while (N % i == 0)
-            N = N / i;
+        factors.push_back(2);
+        num = num / 2;
     }
 
-    if (N > 2)
-        factors.push_back(N);
+    // iterasi semua nilai
+    for (size_t i = 3, batas = sqrt(num); i <= batas; i += 2)
+    {
+        // mendapatkan bernilai sama
+        while (num % i == 0)
+        {
+            factors.push_back(i);
+            num = num / i;
+        }
+    }
+
+    // jika ada faktor yang lebih besar daripada sqrt(num)
+    if (num > 2)
+        factors.push_back(num);
+
+    return factors;
 }
 
 // ======================================================================================
 
-bool Algorithm(size_t val)
+bool algorithm(size_t val)
 {
     size_t t;
 
@@ -69,8 +77,7 @@ bool Algorithm(size_t val)
         return false;
 
     // bangkitkan semua faktor dari val - 1
-    std::vector<int> factors;
-    prime_factors(val - 1, factors);
+    std::vector<int> factors = factorize(val - 1);
 
     // pengecekan Lucas
     for (size_t i = 2; i < val; i++)

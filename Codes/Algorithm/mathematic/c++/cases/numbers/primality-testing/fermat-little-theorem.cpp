@@ -36,9 +36,9 @@ Fermat's Little Theorem:
 // ======================================================================================
 
 // mencari GCD (Greatest Common Divisor / FPB)
-int gcd(int a, int b)
+size_t gcd(size_t a, size_t b)
 {
-    int c = a % b;
+    size_t c = a % b;
 
     while (c > 0)
     {
@@ -51,16 +51,16 @@ int gcd(int a, int b)
 }
 
 // mencari modular exponentiation dari suatu nilai
-int power(int base, int exp, int mod)
+size_t power(size_t base, size_t exp, size_t mod)
 {
-    int result = 1;
+    size_t result = 1;
 
     base = base % mod;
 
     while (exp > 0)
     {
         if (exp & 1)
-            result = (result * base) % mode;
+            result = (result * base) % mod;
         
         exp  = exp / 2;
         base = (base * base) % mod;
@@ -71,7 +71,7 @@ int power(int base, int exp, int mod)
 
 // ======================================================================================
 
-bool Algorithm(size_t val, int k)
+bool algorithm(size_t val, size_t k)
 {
     size_t t;
 
@@ -83,7 +83,7 @@ bool Algorithm(size_t val, int k)
     
     std::random_device  rd;
     std::mt19937        mt(rd());
-    std::uniform_int_distribution<int> dist(0, val - 4);
+    std::uniform_int_distribution<size_t> dist(0, val - 4);
 
     while (k > 0)
     {
