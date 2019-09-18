@@ -16,7 +16,6 @@ Compile:
 Run:
     $ super-ugly-numbers
 */
-#include <vector>
 
 /*
 Masalah:
@@ -41,10 +40,10 @@ Solusi:
     Fungsi akan mengembalikan index dimana nilai minimum ditemukan.
 */
 
-int min_element(int arr[], int N)
+size_t min_element(size_t arr[], size_t N)
 {
-    int i;
-    int _min;
+    size_t i;
+    size_t _min;
 
     _min = arr[0];
 
@@ -61,18 +60,18 @@ int min_element(int arr[], int N)
 
 /** Iterative Solution -- Tabulation **/
 
-int algorithm(int N, int primes[], int N)
+size_t algorithm(size_t N, size_t primes[], size_t K)
 {
     // menampung ugly number yang dibangkitkan
-    int ugly[N];
+    size_t ugly[N];
 
     // alokasikan generator untuk setiap bilangan prima
-    int index[N];
-    int generator[N];
-    int i, j;
-    int next_ugly = 1;
+    size_t index[K];
+    size_t generator[K];
+    size_t i, j;
+    size_t next_ugly = 1;
 
-    for (i = 0; i < N; i++)
+    for (i = 0; i < K; i++)
     {
         index[i] = 0;
         generator[i] = primes[i];
@@ -84,7 +83,7 @@ int algorithm(int N, int primes[], int N)
     for (i = 1; i < N; i++)
     {
         // cari nilai minimum dari baris independen
-        next_ugly = min_element(generator, N);
+        next_ugly = min_element(generator, K);
 
         // masukkan bilangan ke baris
         ugly[i] = next_ugly;

@@ -53,24 +53,24 @@ Langkah:
 
 /** Iterative Solution -- Tabulation **/
 
-int algorithm(int N)
+size_t algorithm(size_t N)
 {
     // menampung ugly number yang dibangkitkan
-    int ugly[N];
+    size_t ugly[N];
 
     // index berdasarkan kelipatan faktor 2, 3, atau 5
-    int i2 = 0, i3 = 0, i5 = 0;
+    size_t i2 = 0, i3 = 0, i5 = 0;
 
     // generator
-    int next_multiple_2 = 2;
-    int next_multiple_3 = 3;
-    int next_multiple_5 = 5;
-    int next_ugly   = 1;
+    size_t next_multiple_2 = 2;
+    size_t next_multiple_3 = 3;
+    size_t next_multiple_5 = 5;
+    size_t next_ugly   = 1;
 
     // inisialisasi elemen ugly pertama
     ugly[0] = 1;
     
-    for (int i = 1; i < N; i++)
+    for (size_t i = 1; i < N; i++)
     {
         // cari nilai minimum dari 3 baris independen
         next_ugly = std::min(next_multiple_2, std::min(next_multiple_3, next_multiple_5));

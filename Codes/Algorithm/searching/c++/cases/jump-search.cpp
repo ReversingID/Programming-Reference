@@ -53,6 +53,8 @@ bool search(T arr[], size_t size, T val, size_t & idx)
     return false;
 }
 
+// ======================================================================================
+
 template <typename T>
 bool algorithm(T arr[], size_t size, T val, size_t & idx)
 {

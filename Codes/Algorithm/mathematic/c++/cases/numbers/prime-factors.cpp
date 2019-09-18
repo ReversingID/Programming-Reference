@@ -29,7 +29,6 @@ Run:
 
 auto algorithm(size_t num)
 {
-    size_t batas;
     std::vector<size_t> factors;
 
     // mendapatkan bernilai sama

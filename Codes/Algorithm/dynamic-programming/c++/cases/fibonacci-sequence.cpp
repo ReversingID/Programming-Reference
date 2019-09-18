@@ -38,7 +38,7 @@ Masalah:
 
 // Lookup table didefinisikan dan diinisialisasi di wrapper
 
-int algorithm(T lookup[], size_t N)
+size_t algorithm(size_t lookup[], size_t N)
 {
     if (N > 1 && lookup[N] == 0)
     {
@@ -51,10 +51,10 @@ int algorithm(T lookup[], size_t N)
 }
 
 /* Wrapper pemanggilan fungsi DP */
-int algorithm(size_t N)
+size_t algorithm(size_t N)
 {
     // deklarasi array untuk menyimpan hasil komputasi per subproblem
-    int lookup[N + 1];
+    size_t lookup[N + 1];
 
     // setup nilai awal
     lookup[0] = 0;
@@ -71,10 +71,10 @@ int algorithm(size_t N)
 
 /** Iterative Solution -- Tabulation **/
 
-int algorithm(size_t N)
+size_t algorithm(size_t N)
 {
     // deklarasi array untuk menyimpan hasil komputasi per subproblem
-    int table[N + 1];
+    size_t table[N + 1];
 
     // setup nilai awal
     table[0] = 0;
@@ -91,11 +91,11 @@ int algorithm(size_t N)
 
 /** Iterative Solution -- Tabulation with Minimum Variable **/
 
-int algorithm(size_t N)
+size_t algorithm(size_t N)
 {
     // deklarasi variabel untuk menyimpan hasil komputasi per subproblem
-    int a = 0, b = 1;
-    int c;
+    size_t a = 0, b = 1;
+    size_t c;
 
     if (N == 0) return a;
     

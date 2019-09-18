@@ -16,6 +16,8 @@ Compile:
 Run:
     $ job-sequencing
 */
+#include <vector>
+#include <utility>
 
 /*
 Masalah:
@@ -31,8 +33,6 @@ Langkah:
         - jika job saat ini dapat dijalankan tanpa melewati deadline, tambahkan job ke
           result.
 */
-#include <vector>
-#include <utility>
 
 // ======================================================================================
 
