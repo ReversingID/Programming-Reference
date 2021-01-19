@@ -4,6 +4,8 @@ Open repository of programming topic for reverse engineering purpose.
 
 ### Selayang Pandang
 
+For english version, see [README.EN.md](README.EN.md)
+
 Repository ini digunakan untuk menghimpun informasi dan pengetahuan tentang konsep-konsep dalam programming sebagai referensi dalam reverse engineering. Secara spesifik, konsep-konsep yang dibahas meliputi algoritma, struktur data, serta pola-desain (design-pattern) dalam perancangan sebuah perangkat lunak. Terdapat berbagai referensi teoretis serta implementasi praktikal dari setiap konsep yang ada.
 
 Fokus utama repository bukanlah pembahasan tentang bahasa pemrograman, baik secara spesifik maupun secara umum. Repository ini menitikberatkan kepada penggunaan bahasa pemrograman untuk membangun komponen-komponen software melalui prinsip-prinsip software engineering yang disederhanakan. Diharapkan konsep dasar pemrograman (seperti: percabangan, perulangan, fungsi, class, dsb) telah dikuasai terlebih dahulu. 
@@ -24,11 +26,11 @@ Repository ini terbagi menjadi beberapa bagian dengan direktori berbeda untuk ma
 - Codes
 - References
 
-_Books_ adalah kumpulan buku, diktat perkuliahan, maupun catatan kecil yang membahas struktur data dan algoritma. Buku-buku di bagian ini diseleksi secara khusus berdasarkan bukan hanya isi namun juga aspek legalitas penyebaran informasi.
+_Books_ adalah kumpulan buku, diktat perkuliahan, maupun catatan kecil yang membahas materi. Buku-buku di bagian ini diseleksi secara khusus berdasarkan bukan hanya isi namun juga aspek legalitas penyebaran informasi.
 
-_Codes_ adalah implementasi struktur data dan algoritma dalam berbagai bahasa pemrograman.
+_Codes_ adalah implementasi materi (struktur data, algoritma, pola desain) dalam berbagai bahasa pemrograman.
 
-_References_ merupakan himpunan referensi berupa artikel, tulisan tangan, dsb tentang implementasi struktur data dan algoritma serta analisis, penerapan dalam kasus-kasus tertentu, dan informasi karakteristiknya.
+_References_ merupakan himpunan referensi berupa artikel, tulisan tangan, dsb tentang implementasi serta analisis, penerapan dalam kasus-kasus tertentu, dan informasi karakteristiknya.
 
 ### Bagaimana Cara Berkontribusi?
 
@@ -44,4 +46,4 @@ Yang harus kamu lakukan:
 - mengirimkan email ke pengurus [at] reversing.id
 - memberi tahu di telegram @ReversingID
 
-Diharapkan agar segala referensi yang ada menggunakan Bahasa Indonesia sebagai sarana penyampaian informasi.
+Diharapkan agar menggunakan Bahasa Indonesia sebagai bahasa pengantar. Meskipun demikian, repository ini juga menerima Bahasa Inggris.
