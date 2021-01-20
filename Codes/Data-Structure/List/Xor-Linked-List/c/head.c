@@ -3,26 +3,28 @@
     Archive of Reversing.ID
     Data Structure
     
+Assemble:
+    (gcc)
+    $ gcc -m32 -S -masm=intel -o head.asm head.c
 
-    Assemble:
-        (gcc)
-        $ gcc -m32 -S -masm=intel -o head.asm head.c
+    (msvc)
+    $ cl /c /Fahead.asm head.c
 
-        (msvc)
-        $ cl /c /Fahead.asm head.c
+    (clang)
+    $ clang -m32 -S -masm=intel -o head.asm head.c
 */
 #include <stdint.h>
 #include <stdlib.h>
 #include <memory.h>
 
 /*
-    Sebuah doubly linked list dengan hanya satu field untuk menyimpan informasi next
-    dan previous node dalam bentuk XOR.
+    Sebuah doubly linked list dengan hanya satu field untuk menyimpan informasi 
+    node penerus dan pendahulu dalam bentuk XOR.
 
     ...   A       B       C       D       E   ...
              <-> A^C <-> B^D <-> C^E <-> 
     
-    link(B) = addr(A) ^ addr(C) 
+    link (B) = addr (A) ^ addr (C) 
 
     Variasi:
         - Addition linked list
@@ -46,7 +48,7 @@ typedef int T;
         - [T*] val: value dari node yang sedang diiterasi
         - [T*] acc: accumulator, nilai akhir hasil agregasi dari callback (jika diperlukan)
 */
-typedef int32_t (*callback_t)(T * val,T * acc);
+typedef int32_t (*callback_t) (T * val,T * acc);
 
 /*
     Node definition
@@ -67,25 +69,26 @@ typedef struct
 } xorlist_t;
 
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
+/* penciptaan objek xorlist */
 int32_t  xorlist_init    (xorlist_t * collection);
 int32_t  xorlist_destroy (singly_t * collection);
-
+/* penambahan elemen/node */
 int32_t  xorlist_prepend (xorlist_t * collection, T value);
 int32_t  xorlist_append  (xorlist_t * collection, T value);
 int32_t  xorlist_insert  (xorlist_t * collection, uint32_t index, T value);
-
+/* penghapusan elemen/node */
 int32_t  xorlist_delete_front (xorlist_t * collection);
 int32_t  xorlist_delete_rear  (xorlist_t * collection);
 int32_t  xorlist_delete_at    (xorlist_t * collection, uint32_t index);
 int32_t  xorlist_delete       (xorlist_t * collection, T value, uint32_t count);
-
+/* perubahan data pada elemen tertentu */
 int32_t  xorlist_update (xorlist_t * collection, uint32_t index, T value);
+/* perubahan struktur */
+int32_t  xorlist_merge  (xorlist_t * collection, xorlist_t * source);
+int32_t  xorlist_clone  (xorlist_t * collection, xorlist_t * source);
+int32_t  xorlist_clear  (xorlist_t * collection);
 
-int32_t  xorlist_merge (xorlist_t * collection, xorlist_t * source);
-
-int32_t  xorlist_clear (xorlist_t * collection);
-
-int32_t  xorlist_clone (xorlist_t * collection, xorlist_t * source);
+int32_t  xorlist_length (xorlist_t * collection);
 
 void     xorlist_traverse (xorlist_t * collection, callback_t callback, T * acc);
 
@@ -93,9 +96,9 @@ void     xorlist_traverse (xorlist_t * collection, callback_t callback, T * acc)
 /*
     Buat node baru.
 */
-node_t * node_new(T value)
+node_t * node_new (T value)
 {
-    node_t * node = (node_t*) malloc(sizeof(node_t));
+    node_t * node = (node_t*) malloc (sizeof (node_t));
     if (node != NULL)
     {
         node->_value   = value;
@@ -110,29 +113,29 @@ node_t * node_new(T value)
 
     NULL == leftnode ^ address ^ rightnode
 */
-node_t * node_xor(node_t * leftnode, node_t * address, node_t * rightnode)
+node_t * node_xor (node_t * leftnode, node_t * address, node_t * rightnode)
 {
-    return (node_t*)(
-        (uintptr_t) leftnode ^ (uintptr_t) address ^ (uintptr_t) rightnode
+    return (node_t*) (
+        ((uintptr_t) leftnode) ^ ((uintptr_t) address) ^ ((uintptr_t) rightnode)
     );
 }
 
 /*
     Menautkan atau memecah tautan di antara dua buah node.
 */
-void node_link(node_t * leftnode, node_t * rightnode)
+void node_link (node_t * leftnode, node_t * rightnode)
 {
     /* node penerus dari "leftnode" adalah "rightnode" */
-    leftnode->_address = node_xor(NULL, leftnode->_address, rightnode);
+    leftnode->_address = node_xor (NULL, leftnode->_address, rightnode);
 
     /* node pendahulu dari "rightnode" adalah "leftnode" */
-    rightnode->_address = node_xor(leftnode, rightnode->_address, NULL);
+    rightnode->_address = node_xor (leftnode, rightnode->_address, NULL);
 }
 
 /*
     Mencari node dengan index tertentu.
 */
-node_t * xorlist_find(xorlist_t * collection, uint32_t index, node_t** res_prevnode)
+node_t * xorlist_find (xorlist_t * collection, uint32_t index, node_t** res_prevnode)
 {
     node_t *save, *iternode, *prevnode;
     
@@ -142,7 +145,7 @@ node_t * xorlist_find(xorlist_t * collection, uint32_t index, node_t** res_prevn
     while (prevnode != iternode->_address && index--)
     {
         save = iternode;
-        iternode = node_xor(prevnode, iternode->_address, NULL);
+        iternode = node_xor (prevnode, iternode->_address, NULL);
         prevnode = save;
     }
     
@@ -163,7 +166,7 @@ node_t * xorlist_find(xorlist_t * collection, uint32_t index, node_t** res_prevn
     Return: 
         - [int] status konstruksi (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_init(xorlist_t * collection)
+int32_t xorlist_init (xorlist_t * collection)
 {
     collection->_length = 0;
     collection->_head   = NULL;
@@ -177,17 +180,12 @@ int32_t xorlist_init(xorlist_t * collection)
     Parameter:
         - [xorlist_t] collection: objek yang akan didestruksi.
     Return: 
-        - [int32_t] status konstruksi (0 = gagal, 1 = berhasil)
+        - [int32_t] status destruksi (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_destroy(xorlist_t * collection)
+int32_t xorlist_destroy (xorlist_t * collection)
 {
-    if (collection->_length > 0 && collection->_head)
-        xorlist_clear(collection);
-    
-    collection->_length = 0;
-    collection->_head   = NULL;
-
-    return 1;
+    /* tidak ada elemen tambahan sehingga destroy() = clear() */
+    return xorlist_clear (collection);
 }
 
 /*
@@ -200,13 +198,13 @@ int32_t xorlist_destroy(xorlist_t * collection)
     Return:
         - [int] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_prepend(xorlist_t * collection, T value)
+int32_t xorlist_prepend (xorlist_t * collection, T value)
 {
     /* 
-    operasi prepend() atau menambahkan node di urutan terdepan merupakan 
-    operasi yang ekivalen dengan operasi insert() pada posisi 0
+    operasi prepend () atau menambahkan node di urutan terdepan merupakan 
+    operasi yang ekivalen dengan operasi insert () pada posisi 0
     */
-    return xorlist_insert(collection, 0, value);
+    return xorlist_insert (collection, 0, value);
 }
 
 /*
@@ -219,13 +217,13 @@ int32_t xorlist_prepend(xorlist_t * collection, T value)
     Return:
         - [int] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_append(xorlist_t * collection, T value)
+int32_t xorlist_append (xorlist_t * collection, T value)
 {
     /* 
-    Operasi append() atau menambahkan node di urutan terakhir merupakan
-    operasi yang ekivalen dengan operasi insert() pada posisi Length
+    Operasi append () atau menambahkan node di urutan terakhir merupakan
+    operasi yang ekivalen dengan operasi insert () pada posisi Length
     */
-    return xorlist_insert(collection, collection->_length, value);
+    return xorlist_insert (collection, collection->_length, value);
 }
 
 /*
@@ -239,13 +237,13 @@ int32_t xorlist_append(xorlist_t * collection, T value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_insert(xorlist_t * collection, uint32_t index, T value)
+int32_t xorlist_insert (xorlist_t * collection, uint32_t index, T value)
 {
     node_t   *prevnode, *iternode, *node;
     uint32_t iter = index;
 
     /* buat node baru. Jika gagal, maka kondisi list tak berubah */
-    node = node_new(value);
+    node = node_new (value);
     if (node == NULL)
         return 0;
 
@@ -261,24 +259,24 @@ int32_t xorlist_insert(xorlist_t * collection, uint32_t index, T value)
     else
     {
         /* cari node pada posisi index */
-        iternode = xorlist_find(collection, index, &prevnode);
+        iternode = xorlist_find (collection, index, &prevnode);
 
         /* Jika index menunjukkan posisi akhir */
         if (index >= collection->_length)
-            node_link(iternode, node);
+            node_link (iternode, node);
         else 
         {
              /* tautkan "prevnode" sebagai node pendahulu dari node saat ini */
             if (prevnode)
             {
                 /* pecahkan tautan antara "prevnode" dan "iternode" */
-                node_link(prevnode, iternode);
+                node_link (prevnode, iternode);
 
                 /* tautkan "prevnode" sebagai node pendahulu */
-                node_link(prevnode, node);
+                node_link (prevnode, node);
             }
             /* tautkan "iternode" sebagai node penerus */
-            node_link(node, iternode);
+            node_link (node, iternode);
         }
 
         /* jika index adalah 0, maka jadikan node sebagai head */
@@ -299,13 +297,13 @@ int32_t xorlist_insert(xorlist_t * collection, uint32_t index, T value)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_delete_front(xorlist_t * collection)
+int32_t xorlist_delete_front (xorlist_t * collection)
 {
     /* 
     operasi penghapusan node di urutan terdepan merupakan 
     operasi yang ekivalen dengan operasi penghapusan pada posisi 0
     */
-    return xorlist_delete_at(collection, 0);
+    return xorlist_delete_at (collection, 0);
 }
 
 /*
@@ -317,13 +315,13 @@ int32_t xorlist_delete_front(xorlist_t * collection)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_delete_rear(xorlist_t * collection)
+int32_t xorlist_delete_rear (xorlist_t * collection)
 {
     /* 
     operasi penghapusan node di urutan terakhir merupakan 
     operasi yang ekivalen dengan operasi penghapusan pada posisi "Length - 1"
     */
-    return xorlist_delete_at(collection, collection->_length - 1);
+    return xorlist_delete_at (collection, collection->_length - 1);
 }
 
 /*
@@ -336,7 +334,7 @@ int32_t xorlist_delete_rear(xorlist_t * collection)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_delete_at(xorlist_t * collection, uint32_t index)
+int32_t xorlist_delete_at (xorlist_t * collection, uint32_t index)
 {
     node_t   *prevnode, *iternode, *save, *nextnode, *node;
     uint32_t  iter = index;
@@ -356,22 +354,22 @@ int32_t xorlist_delete_at(xorlist_t * collection, uint32_t index)
     else    
     {
         /* cari node pada posisi index */
-        iternode = xorlist_find(collection, index, &prevnode);
+        iternode = xorlist_find (collection, index, &prevnode);
 
         /* alamat dari node penerus iternode */
-        nextnode = node_xor(prevnode, iternode->_address, NULL); 
+        nextnode = node_xor (prevnode, iternode->_address, NULL); 
 
         /* pecahkan tautan antara "prevnode" dan "iternode" */
         if (prevnode)
-            node_link(prevnode, iternode);
+            node_link (prevnode, iternode);
         
         /* pecahkan tautan antara "prevnode" dan "iternode" */
         if (nextnode)
-            node_link(iternode, nextnode);
+            node_link (iternode, nextnode);
         
         /* tautkan antara "prevnode" dan "nextnode" */
         if (prevnode && nextnode)
-            node_link(prevnode, nextnode);
+            node_link (prevnode, nextnode);
         
         /* jika penghapusan terjadi di head, maka ubah head agar menunjuk node berikutnya */
         if (index == 0)
@@ -379,7 +377,7 @@ int32_t xorlist_delete_at(xorlist_t * collection, uint32_t index)
     }
     
     /* dealokasi node */
-    free(iternode);
+    free (iternode);
     collection->_length --;
     return 1;
 }
@@ -395,7 +393,7 @@ int32_t xorlist_delete_at(xorlist_t * collection, uint32_t index)
     Return:
         - [int] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_delete(xorlist_t * collection, T value, uint32_t count)
+int32_t xorlist_delete (xorlist_t * collection, T value, uint32_t count)
 {
     node_t   *prevnode, *iternode, *save, *nextnode;
     uint32_t length;
@@ -420,28 +418,28 @@ int32_t xorlist_delete(xorlist_t * collection, T value, uint32_t count)
     while (count && iternode)
     {
         /* dapatkan node penerus dari "iternode" */
-        nextnode = node_xor(prevnode, iternode->_address, NULL);
+        nextnode = node_xor (prevnode, iternode->_address, NULL);
 
         /* jika node memiliki nilai yang dicari ... */
         if (iternode->_value == value)
         {            
             /* pecahkan tautan antara "prevnode" dan "iternode" */
             if (prevnode)
-                node_link(prevnode, iternode);
+                node_link (prevnode, iternode);
             /* bila node yang dihapus merupakan head, maka pindahkan head ke posisi berikutnya */
             else
                 collection->_head = nextnode;
             
             /* pecahkan tautan antara "prevnode" dan "iternode" */
             if (nextnode)
-                node_link(iternode, nextnode);
+                node_link (iternode, nextnode);
             
             /* tautkan antara "prevnode" dan "nextnode" */
             if (prevnode && nextnode)
-                node_link(prevnode, nextnode);
+                node_link (prevnode, nextnode);
             
             /* hapus iternode */
-            free(iternode);
+            free (iternode);
             
             /* kurangi counter dan jumlah node */
             count --;
@@ -468,7 +466,7 @@ int32_t xorlist_delete(xorlist_t * collection, T value, uint32_t count)
     Return:
         - [int] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_update(xorlist_t * collection, uint32_t index, T value)
+int32_t xorlist_update (xorlist_t * collection, uint32_t index, T value)
 {
     node_t *iternode;
 
@@ -478,7 +476,7 @@ int32_t xorlist_update(xorlist_t * collection, uint32_t index, T value)
     else 
     {
         /* cari node pada posisi index */
-        iternode = xorlist_find(collection, index, NULL);
+        iternode = xorlist_find (collection, index, NULL);
 
         /* ubah nilainya */
         iternode->_value = value;
@@ -497,7 +495,7 @@ int32_t xorlist_update(xorlist_t * collection, uint32_t index, T value)
     Return:
         - [int] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_merge(xorlist_t * collection, xorlist_t * source)
+int32_t xorlist_merge (xorlist_t * collection, xorlist_t * source)
 {
     node_t *iternode;
 
@@ -514,10 +512,10 @@ int32_t xorlist_merge(xorlist_t * collection, xorlist_t * source)
     else 
     {
         /* Cari node terakhir */
-        iternode = xorlist_find(collection, collection->_length - 1, NULL);
+        iternode = xorlist_find (collection, collection->_length - 1, NULL);
 
         /* tautkan antara "tail" dari collection dan "head" dari source */
-        node_link(iternode, source->_head);
+        node_link (iternode, source->_head);
     }
     
     /* kosongkan source */
@@ -536,27 +534,24 @@ int32_t xorlist_merge(xorlist_t * collection, xorlist_t * source)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t xorlist_clear(xorlist_t * collection)
+int32_t xorlist_clear (xorlist_t * collection)
 {
     node_t *iternode, *prevnode, *nextnode;
 
-    if (collection->_length)
+    prevnode = NULL;
+
+    /* Iterasi seluruh list */
+    iternode = collection->_head;
+    while (iternode)
     {
-        prevnode = NULL;
+        nextnode = node_xor (prevnode, iternode->_address, NULL);
+        prevnode = iternode;
 
-        /* Iterasi seluruh list */
-        iternode = collection->_head;
-        while (iternode)
-        {
-            nextnode = node_xor(prevnode, iternode->_address, NULL);
-            prevnode = iternode;
-
-            free(iternode);
-            iternode = nextnode;
-        }
-        collection->_length = 0;
+        free (iternode);
+        iternode = nextnode;
     }
 
+    collection->_length = 0;
     collection->_head = NULL;
     return 1;
 }
@@ -569,7 +564,7 @@ int32_t xorlist_clear(xorlist_t * collection)
     Return:
         - [int32_t] jumlah node dalam list
 */
-int32_t xorlist_length(xorlist_t * collection)
+int32_t xorlist_length (xorlist_t * collection)
 {
     return collection->_length;
 }
@@ -586,7 +581,7 @@ int32_t xorlist_length(xorlist_t * collection)
     Return:
         - [xorlist_t] list baru
 */
-int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
+int32_t xorlist_clone (xorlist_t * collection, xorlist_t * source)
 {
     node_t   *iterdst = NULL, *itersrc = NULL, *node;
     node_t   *prevnode, *save;
@@ -596,7 +591,7 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
     Apabila objek telah menyimpan beberapa node, maka list
     harus dibersihkan terlebih dahulu.
     */
-    xorlist_clear(collection);
+    xorlist_clear (collection);
 
     /* iterasi seluruh node di dalam list */
     itersrc = source->_head;
@@ -605,7 +600,7 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
         prevnode = NULL;
 
         /* alokasi node sebagai calon head */
-        node = node_new(itersrc->_value);
+        node = node_new (itersrc->_value);
         /* jika alokasi berhasil maka ... */
         if (node)
         {
@@ -615,7 +610,7 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
 
             /* pindahkan itersrc ke node berikutnya */
             save     = itersrc;
-            itersrc  = node_xor(prevnode, itersrc->_address, NULL);
+            itersrc  = node_xor (prevnode, itersrc->_address, NULL);
             prevnode = save;
 
             /* gunakan sebagai pivot dalam penambahan node */
@@ -624,11 +619,11 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
             /* Lakukan penyalinan dengan iterasi kembali ke seluruh node. */
             while (itersrc)
             {
-                node = node_new(itersrc->_value);
+                node = node_new (itersrc->_value);
                 if (node)
                 {
                     /* tautkan antara "iterdst" dan node */
-                    node_link(iterdst, node);
+                    node_link (iterdst, node);
 
                     iterdst = node;
                     length ++;
@@ -636,7 +631,7 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
                 
                 /* maju ke node berikutnya di "source" */
                 save     = itersrc;
-                itersrc  = node_xor(prevnode, itersrc->_address, NULL);
+                itersrc  = node_xor (prevnode, itersrc->_address, NULL);
                 prevnode = save;
             }
         }
@@ -657,7 +652,7 @@ int32_t xorlist_clone(xorlist_t * collection, xorlist_t * source)
     Return:
         - None
 */
-void xorlist_traverse(xorlist_t * collection, callback_t callback, T * acc)
+void xorlist_traverse (xorlist_t * collection, callback_t callback, T * acc)
 {
     node_t *iternode, *prevnode, *save;
 
@@ -672,11 +667,11 @@ void xorlist_traverse(xorlist_t * collection, callback_t callback, T * acc)
     while (iternode)
     {
         /* jalankan callback di setiap node */
-        (*callback)(&iternode->_value, acc);
+        (*callback) (&iternode->_value, acc);
 
         /* maju ke node berikutnya */
         save = iternode;
-        iternode  = node_xor(prevnode, iternode->_address, NULL);
+        iternode  = node_xor (prevnode, iternode->_address, NULL);
         prevnode = save;
     }
 }

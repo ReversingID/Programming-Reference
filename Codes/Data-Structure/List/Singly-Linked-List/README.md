@@ -1,6 +1,8 @@
 ## Linked List
 
-### Singly Linked List
+Singly Linked-List implementation and reversing.
+
+### Overview
 
 Senarai dengan setiap node hanya memiliki satu tautan menuju elemen penerus (successor). Hal ini berarti penelusuran hanya dapat dilakukan satu arah yakni dari awal (node mula) hingga akhir.
 
@@ -13,3 +15,5 @@ Terdapat beberapa variasi yang memungkinkan, yakni:
 - __sentinel-last__, sebuah sentinel (node fiktif) sengaja diletakkan di akhir untuk menyeragamkan penanganan terhadap kasus list kosong.
 - __self-sentinel__, sebuah sentinel yang menunjuk ke diri sendiri (self-pointed).
 - __circular__, sebuah plain linked-list dengan node akhir menunjuk ke node awal, TAIL menunjuk HEAD sebagai node penerus.
+
+## Reversing Notes

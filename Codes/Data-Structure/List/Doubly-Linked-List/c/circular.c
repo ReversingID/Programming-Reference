@@ -3,12 +3,15 @@
     Archive of Reversing.ID
     Data Structure
 
-    Assemble:
-        (gcc)
-        $ gcc -m32 -S -masm=intel -o circular.asm circular.c
+Assemble:
+    (gcc)
+    $ gcc -m32 -S -masm=intel -o circular.asm circular.c
 
-        (msvc)
-        $ cl /c /Facircular.asm circular.c
+    (msvc)
+    $ cl /c /Facircular.asm circular.c
+
+    (clang)
+    $ clang -m32 -S -masm=intel -o circular.asm circular.c
 */
 #include <stdint.h>
 #include <stdlib.h>
@@ -21,19 +24,19 @@
     Senarai membentuk pola circular dimana node terakhir akan menunjuk node pertama
     sebagai penerus dan node pertama akan menunjuk node terakhir sebagai pendahulu.
 
-    Kasus umum
-    ...   A  <->  B  <->  C  <->  D  <->  E  <->  A
+Kasus umum:
+    ...   A  <=>  B  <=>  C  <=>  D  <=>  E  <=>  A
           ^
           ^
         HEAD
     
-    Kasus kosong
+Kasus kosong:
     ...   <NULL>
             ^
             ^
            HEAD
     
-    Kasus 1 element
+Kasus 1 element:
     ... A  <-  A  ->  A
                ^
                ^
@@ -43,7 +46,7 @@
     HEAD adalah pointer yang menunjuk ke node di awal list.
 
 
-    Asumsi:
+Asumsi:
     Struktur data tidak generic.
     Tidak ada alokasi VALUE ketika pembuatan node baru, data yang disimpan akan disalin
     secara langsung.
@@ -67,10 +70,13 @@ typedef int32_t T;
         - [T*] val: value dari node yang sedang diiterasi
         - [T*] acc: accumulator, nilai akhir hasil agregasi dari callback (jika diperlukan)
 */
-typedef int32_t (*callback_t)(T * val, T * acc);
+typedef int32_t (*callback_t) (T * val, T * acc);
 
 /*
     Node definition
+
+    Terdiri atas pointer ke node penerus (successor) dan pendahulu (predecessor).
+    Hanya dapat berisi alamat valid, tidak dapat berisi NULL.
 */
 typedef struct node_t
 {
@@ -90,26 +96,26 @@ typedef struct
 
 
 /* ******************************** PROTOTIPE FUNGSI ******************************** */
-int32_t  doubly_init (doubly_t * collection);
-
+/* penciptaan objek double linked-list */
+int32_t  doubly_init    (doubly_t * collection);
+int32_t  doubly_destroy (doubly_t * collection);
+/* penambahan elemen/node */
 int32_t  doubly_prepend (doubly_t * collection, T value);
 int32_t  doubly_append  (doubly_t * collection, T value);
 int32_t  doubly_insert  (doubly_t * collection, uint32_t index, T value);
-
+/* penghapusan elemen/node */
 int32_t  doubly_delete_front (doubly_t * collection);
 int32_t  doubly_delete_rear  (doubly_t * collection);
 int32_t  doubly_delete_at    (doubly_t * collection, uint32_t index);
 int32_t  doubly_delete       (doubly_t * collection, T value, uint32_t count);
-
+/* perubahan data pada elemen tertentu */
 int32_t  doubly_update (doubly_t * collection, uint32_t index, T value);
-
+/* perubahan struktur */
 int32_t  doubly_merge (doubly_t * collection, doubly_t * source);
-
+int32_t  doubly_clone (doubly_t * collection, doubly_t * source);
 int32_t  doubly_clear (doubly_t * collection);
 
 int32_t  doubly_length (doubly_t * collection);
-
-int32_t  doubly_clone (doubly_t * collection, doubly_t * source);
 
 void     doubly_traverse (doubly_t * collection, callback_t callback, T * acc);
 
@@ -117,10 +123,12 @@ void     doubly_traverse (doubly_t * collection, callback_t callback, T * acc);
 /* ******************************* INTERNAL FUNCTIONS ******************************* */
 /*
     Buat node baru.
+    Awalnya node penerus dan pendahulu akan menunjuk kepada diri sendiri.
+    Node tidak dapat menunjuk ke NULL.
 */
-node_t * node_new(T value)
+node_t * node_new (T value)
 {
-    node_t * node = (node_t*) malloc(sizeof(node_t));
+    node_t * node = (node_t*) malloc (sizeof (node_t));
     if (node != NULL)
     {
         node->_value = value;
@@ -135,7 +143,7 @@ node_t * node_new(T value)
     Menautkan dua node sehingga tautan di antara keduanya menunjuk
     satu sama lain.
 */
-void node_link(node_t * leftnode, node_t * rightnode)
+void node_link (node_t * leftnode, node_t * rightnode)
 {
     /* node penerus dari "leftnode" adalah "rightnode" */
     leftnode->_next = rightnode;
@@ -150,10 +158,10 @@ void node_link(node_t * leftnode, node_t * rightnode)
 
     Hanya menghasilkan pointer ke node yang sesuai.
 */
-node_t * doubly_find_idx(doubly_t * collection, uint32_t index)
+node_t * doubly_find_idx (doubly_t * collection, uint32_t index)
 {
     node_t * iternode;
-    uint32_t iter;
+    uint32_t iteridx;
 
     /* Operasi pencarian hanya bisa dilakukan pada collection yang memiliki konten */
     if (collection->_length == 0)
@@ -166,10 +174,10 @@ node_t * doubly_find_idx(doubly_t * collection, uint32_t index)
     iternode = collection->_head;
     if (index < collection->_length / 2)
     {
-        iter = index;
+        iteridx = index;
 
-        /* iterasi list, cari node ke-(index-1). */
-        while (iter--)
+        /* iterasi list, cari node ke- (index-1). */
+        while (iteridx--)
             iternode = iternode->_next;
     }
     /*
@@ -178,9 +186,9 @@ node_t * doubly_find_idx(doubly_t * collection, uint32_t index)
     */
     else 
     {
-        iter = collection->_length - index;
+        iteridx = collection->_length - index;
         
-        while (iter--)
+        while (iteridx--)
             iternode = iternode->_prev;
     }
 
@@ -198,13 +206,29 @@ node_t * doubly_find_idx(doubly_t * collection, uint32_t index)
     Return: 
         - [int32_t] status konstruksi (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_init(doubly_t * collection)
+int32_t doubly_init (doubly_t * collection)
 {
     collection->_length = 0;
     collection->_head   = NULL;
 
     return 1;
 }
+
+/*
+    Destruktor (penghancur objek)
+    Destruksi objek yang valid untuk membebaskan objek dari memori.
+
+    Parameter:
+        - [doubly_t] collection: objek yang akan didestruksi.
+    Return:
+        - [int32_t] status destruksi (0 = gagal, 1 = berhasil)
+*/
+int32_t doubly_destroy (doubly_t * collection)
+{
+    /* tidak ada elemen tambahan sehingga destroy() = clear() */
+    return doubly_clear (collection);
+}
+
 
 /*
     Penambahan (prepend)
@@ -216,13 +240,13 @@ int32_t doubly_init(doubly_t * collection)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_prepend(doubly_t * collection, T value)
+int32_t doubly_prepend (doubly_t * collection, T value)
 {
     /* 
-    operasi prepend() atau menambahkan node di urutan terdepan merupakan 
-    operasi yang ekivalen dengan operasi insert() pada posisi 0
+    operasi prepend () atau menambahkan node di urutan terdepan merupakan 
+    operasi yang ekivalen dengan operasi insert () pada posisi 0
     */
-    return doubly_insert(collection, 0, value);
+    return doubly_insert (collection, 0, value);
 }
 
 /*
@@ -235,13 +259,13 @@ int32_t doubly_prepend(doubly_t * collection, T value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_append(doubly_t * collection, T value)
+int32_t doubly_append (doubly_t * collection, T value)
 {
     /* 
-    Operasi append() atau menambahkan node di urutan terakhir merupakan
-    operasi yang ekivalen dengan operasi insert() pada posisi Length
+    Operasi append () atau menambahkan node di urutan terakhir merupakan
+    operasi yang ekivalen dengan operasi insert () pada posisi Length
     */
-    return doubly_insert(collection, collection->_length, value);
+    return doubly_insert (collection, collection->_length, value);
 }
 
 /*
@@ -255,13 +279,13 @@ int32_t doubly_append(doubly_t * collection, T value)
     Return:
         - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_insert(doubly_t * collection, uint32_t index, T value)
+int32_t doubly_insert (doubly_t * collection, uint32_t index, T value)
 {
     node_t   *iternode, *node;
     uint32_t iter;
 
     /* buat node baru. Jika gagal, maka kondisi list tak berubah */
-    node = node_new(value);
+    node = node_new (value);
     if (node == NULL)
         return 0;
 
@@ -281,11 +305,11 @@ int32_t doubly_insert(doubly_t * collection, uint32_t index, T value)
             index = collection->_length;
 
         /* cari node pada posisi index */
-        iternode = doubly_find_idx(collection, index);
+        iternode = doubly_find_idx (collection, index);
         
         /* dan letakkan node sebelum node tersebut */
-        node_link(iternode->_prev, node);
-        node_link(node, iternode);
+        node_link (iternode->_prev, node);
+        node_link (node, iternode);
 
         /* sesuaikan head apabila terjadi perubahan */
         if (index == 0)
@@ -306,13 +330,13 @@ int32_t doubly_insert(doubly_t * collection, uint32_t index, T value)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_delete_front(doubly_t * collection)
+int32_t doubly_delete_front (doubly_t * collection)
 {
     /* 
     operasi penghapusan node di urutan terdepan merupakan 
     operasi yang ekivalen dengan operasi penghapusan pada posisi 0
     */
-    return doubly_delete_at(collection, 0);
+    return doubly_delete_at (collection, 0);
 }
 
 /*
@@ -324,13 +348,13 @@ int32_t doubly_delete_front(doubly_t * collection)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_delete_rear(doubly_t * collection)
+int32_t doubly_delete_rear (doubly_t * collection)
 {
     /* 
     operasi penghapusan node di urutan terakhir merupakan 
     operasi yang ekivalen dengan operasi penghapusan pada posisi "Length - 1"
     */
-    return doubly_delete_at(collection, collection->_length - 1);
+    return doubly_delete_at (collection, collection->_length - 1);
 }
 
 /*
@@ -343,7 +367,7 @@ int32_t doubly_delete_rear(doubly_t * collection)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_delete_at(doubly_t * collection, uint32_t index)
+int32_t doubly_delete_at (doubly_t * collection, uint32_t index)
 {
     node_t   *prev, *iternode, *node;
     uint32_t  iter;
@@ -363,10 +387,10 @@ int32_t doubly_delete_at(doubly_t * collection, uint32_t index)
     else    
     {
         /* cari node pada posisi index */
-        iternode = doubly_find_idx(collection, index);
+        iternode = doubly_find_idx (collection, index);
             
         /* perbaiki tautan yang ada di node tetangga */
-        node_link(iternode->_prev, iternode->_next);
+        node_link (iternode->_prev, iternode->_next);
 
         /* sesuaikan head apabila terjadi perubahan */
         if (index == 0)
@@ -374,7 +398,7 @@ int32_t doubly_delete_at(doubly_t * collection, uint32_t index)
     }
 
     /* dealokasi node */
-    free(iternode);
+    free (iternode);
     collection->_length --;
 
     return 1;
@@ -391,7 +415,7 @@ int32_t doubly_delete_at(doubly_t * collection, uint32_t index)
     Return:
         - [int32_t] status penghapusan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_delete(doubly_t * collection, T value, uint32_t count)
+int32_t doubly_delete (doubly_t * collection, T value, uint32_t count)
 {
     node_t   *iternode, *nextnode, *tailnode;
     uint32_t length;
@@ -421,10 +445,10 @@ int32_t doubly_delete(doubly_t * collection, T value, uint32_t count)
             /* simpan alamat node penerus */
             nextnode = iternode->_next;
 
-            node_link(iternode->_prev, iternode->_next);
+            node_link (iternode->_prev, iternode->_next);
 
             /* hapus "iternode" yang berarti kurangi counter dan jumlah node */
-            free(iternode);
+            free (iternode);
             count --;
             length --;
 
@@ -445,10 +469,10 @@ int32_t doubly_delete(doubly_t * collection, T value, uint32_t count)
         /* jika node memiliki nilai yang dicari ... */
         if (iternode->_value == value)
         {
-            node_link(iternode->_prev, iternode->_next);
+            node_link (iternode->_prev, iternode->_next);
 
             /* hapus iternode */
-            free(iternode);
+            free (iternode);
 
             /* kurangi counter */
             count --;
@@ -468,9 +492,9 @@ int32_t doubly_delete(doubly_t * collection, T value, uint32_t count)
     if (count && tailnode->_value == value)
     {
         if (length > 1)
-            node_link(tailnode->_prev, tailnode->_next);
+            node_link (tailnode->_prev, tailnode->_next);
 
-        free(tailnode);
+        free (tailnode);
 
         count --;
         length --;
@@ -493,9 +517,9 @@ int32_t doubly_delete(doubly_t * collection, T value, uint32_t count)
         - [T] value: nilai baru yang akan diisikan.
         - [uint32_t] index: index dari elemen yang akan dimodifikasi
     Return:
-        - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
+        - [int32_t] status perubahan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_update(doubly_t * collection, uint32_t index, T value)
+int32_t doubly_update (doubly_t * collection, uint32_t index, T value)
 {
     node_t * iternode;
 
@@ -508,7 +532,7 @@ int32_t doubly_update(doubly_t * collection, uint32_t index, T value)
     else 
     {
         /* cari node pada posisi index */
-        iternode = doubly_find_idx(collection, index);
+        iternode = doubly_find_idx (collection, index);
 
         /* ubah nilainya */
         iternode->_value = value;
@@ -527,9 +551,9 @@ int32_t doubly_update(doubly_t * collection, uint32_t index, T value)
         - [doubly_t] source: objek yang telah dikonstruksi, 
                 list yang akan ditambahkan ke collection.
     Return:
-        - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
+        - [int32_t] status penggabungan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_merge(doubly_t * collection, doubly_t * source)
+int32_t doubly_merge (doubly_t * collection, doubly_t * source)
 {
     /* jika list collection kosong maka ... */
     if (collection->_length == 0)
@@ -544,8 +568,8 @@ int32_t doubly_merge(doubly_t * collection, doubly_t * source)
         node_t * tail_s = head_s->_prev;
 
         /* sesuaikan tautan yang ada agar kedua senarai saling menyambung */
-        node_link(tail_n, head_s);
-        node_link(tail_s, head_n);
+        node_link (tail_n, head_s);
+        node_link (tail_s, head_n);
     }
 
     collection->_length += source->_length;
@@ -558,20 +582,92 @@ int32_t doubly_merge(doubly_t * collection, doubly_t * source)
 }
 
 /*
+    Salin (clone)
+    Membuat sebuah list baru dengan salinan seluruh node yang ada di list.
+
+    Parameter:
+        - [doubly_t] collection: objek yang telah dikonstruksi dan akan menerima
+                     salinan node dari source.
+        - [doubly_t] source: objek yang telah dikonstruksi dan akan disalin ke 
+                     collection
+    Return:
+        - [doubly_t] list baru
+*/
+int32_t doubly_clone (doubly_t * collection, doubly_t * source)
+{
+    node_t   *iterdst = NULL, *itersrc = NULL, *node, *headnode;
+    uint32_t length = 0;
+
+    /*
+    Apabila objek telah menyimpan beberapa node, maka list
+    harus dibersihkan terlebih dahulu.
+    */
+    doubly_clear (collection);
+
+    /* iterasi seluruh node di dalam list */
+    itersrc = source->_head;
+    headnode = source->_head;
+
+    if (itersrc)
+    {
+        /* alokasi node sebagai calon head */
+        node = node_new (itersrc->_value);
+        if (node)
+        {
+            /* jadikan node tersebut sebagai head */
+            collection->_head = node;
+            length ++;
+
+            /* pindahkan itersrc ke node berikutnya */
+            itersrc = itersrc->_next;
+
+            /* gunakan sebagai pivot dalam penambahan node */
+            iterdst = node;
+
+            /* iterasi list source dan lakukan clone untuk setiap node yang ada */
+            while (itersrc->_next != headnode)
+            {
+                node = node_new (itersrc->_value);
+                if (node)
+                {
+                    node_link (iterdst, node);
+
+                    iterdst = iterdst->_next;
+                    length ++;
+                }
+                itersrc = itersrc->_next;
+            }
+
+            /* buat dan tautkan node terakhir */
+            node = node_new (itersrc->_value);
+            if (node)
+            {
+                node_link (iterdst, node);
+                node_link (node, collection->_head);
+                length ++;
+            }
+        }
+    }
+
+    collection->_length = length;
+    return 1;
+}
+
+/*
     Pembersihan (clear)
     Mengosongkan (menghapus) seluruh node dari list.
 
     Parameter:
         - [doubly_t] collection: objek yang telah dikonstruksi
     Return:
-        - [int32_t] status penambahan (0 = gagal, 1 = berhasil)
+        - [int32_t] status pembersihan (0 = gagal, 1 = berhasil)
 */
-int32_t doubly_clear(doubly_t * collection)
+int32_t doubly_clear (doubly_t * collection)
 {
     node_t   *iternode, *nextnode, *tailnode;
     uint32_t i;
 
-    if (collection->_length)
+    if (collection->_head)
     {
         iternode = collection->_head;
         tailnode = iternode->_prev;
@@ -583,14 +679,14 @@ int32_t doubly_clear(doubly_t * collection)
             nextnode = iternode->_next;
 
             /* hapus node saat ini */
-            free(iternode);
+            free (iternode);
 
             /* maju ke node berikutnya */
             iternode = nextnode;
         }
 
         /* Hapus node terakhir */
-        free(iternode);
+        free (iternode);
     }
 
     collection->_length = 0;
@@ -607,81 +703,9 @@ int32_t doubly_clear(doubly_t * collection)
     Return:
         - [int32_t] jumlah node dalam list
 */
-int32_t doubly_length(doubly_t * collection)
+int32_t doubly_length (doubly_t * collection)
 {
     return collection->_length;
-}
-
-/*
-    Salin (clone)
-    Membuat sebuah list baru dengan salinan seluruh node yang ada di list.
-
-    Parameter:
-        - [doubly_t] collection: objek yang telah dikonstruksi dan akan menerima
-                     salinan node dari source.
-        - [doubly_t] source: objek yang telah dikonstruksi dan akan disalin ke 
-                     collection
-    Return:
-        - [doubly_t] list baru
-*/
-int32_t doubly_clone(doubly_t * collection, doubly_t * source)
-{
-    node_t   *iterdst = NULL, *itersrc = NULL, *node, *headnode;
-    uint32_t length = 0;
-
-    /*
-    Apabila objek telah menyimpan beberapa node, maka list
-    harus dibersihkan terlebih dahulu.
-    */
-    doubly_clear(collection);
-
-    /* iterasi seluruh node di dalam list */
-    itersrc = source->_head;
-    headnode = source->_head;
-
-    if (itersrc)
-    {
-        /* alokasi node sebagai calon head */
-        node = node_new(itersrc->_value);
-        if (node)
-        {
-            /* jadikan node tersebut sebagai head */
-            collection->_head = node;
-            length ++;
-
-            /* pindahkan itersrc ke node berikutnya */
-            itersrc = itersrc->_next;
-
-            /* gunakan sebagai pivot dalam penambahan node */
-            iterdst = node;
-
-            /* iterasi list source dan lakukan clone untuk setiap node yang ada */
-            while (itersrc->_next != headnode)
-            {
-                node = node_new(itersrc->_value);
-                if (node)
-                {
-                    node_link(iterdst, node);
-
-                    iterdst = iterdst->_next;
-                    length ++;
-                }
-                itersrc = itersrc->_next;
-            }
-
-            /* buat dan tautkan node terakhir */
-            node = node_new(itersrc->_value);
-            if (node)
-            {
-                node_link(iterdst, node);
-                node_link(node, collection->_head);
-                length ++;
-            }
-        }
-    }
-
-    collection->_length = length;
-    return 1;
 }
 
 /*
@@ -692,7 +716,7 @@ int32_t doubly_clone(doubly_t * collection, doubly_t * source)
     Return:
         - None
 */
-void doubly_traverse(doubly_t * collection, callback_t callback, T * acc)
+void doubly_traverse (doubly_t * collection, callback_t callback, T * acc)
 {
     node_t   *iternode, *headnode;
 
@@ -707,12 +731,12 @@ void doubly_traverse(doubly_t * collection, callback_t callback, T * acc)
     while (iternode->_next != headnode)
     {
         /* jalankan callback di setiap node */
-        (*callback)(&iternode->_value, acc);
+        (*callback) (&iternode->_value, acc);
 
         /* maju ke node berikutnya */
         iternode = iternode->_next;
     }
 
     /* jalankan callback di node akhir */
-    (*callback)(&iternode->_value, acc);
+    (*callback) (&iternode->_value, acc);
 }
